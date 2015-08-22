@@ -13,14 +13,17 @@ type Server struct {
 	incmdproc *processor.InCommandQueue
 	outcmdproc *processor.OutCommandQueue
 	config *ServerConf	
+	innerServer *InnerServer
 }
 
 func NewServer(conf *ServerConf, ks storage.OvoStorage, in *processor.InCommandQueue, out *processor.OutCommandQueue) *Server {
 	srv := &Server{keystorage:ks, incmdproc:in, outcmdproc:out, config:conf}
+	srv.innerServer = NewInnerServer(conf, ks, in)
 	return srv
 }
 
 func (srv *Server) Do() {
+	go srv.innerServer.Do()
 	// Creates a router without any middleware by default
     router := gin.New()
     // Global middleware

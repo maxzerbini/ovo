@@ -5,6 +5,7 @@ import(
 	"github.com/maxzerbini/ovo/processor"
 	"github.com/maxzerbini/ovo/server/model"
 	"net/http"
+	"strconv"
 	"github.com/gin-gonic/gin"
 )
 
@@ -38,7 +39,10 @@ func (srv *Server) Do() {
 	router.POST("/ovo/keystorage/:key/updatekeyvalueifequal", srv.updateKeyAndValueIfEqual )
 	router.POST("/ovo/keystorage/:key/updatekey", srv.updateKey )
 	// Listen and server on 0.0.0.0:8080
-    router.Run(":8080")
+	if srv.config.Node.Debug {
+		gin.SetMode(gin.DebugMode)
+	} else { gin.SetMode(gin.ReleaseMode) }
+    router.Run(srv.config.Node.Host+":"+strconv.Itoa(srv.config.Node.Port))
 }
 
 func (srv *Server) get (c *gin.Context) {

@@ -15,7 +15,7 @@ func TestPutAndGet(t *testing.T) {
 	t.Log("TestPutAndGet started")
 	coll := NewCollection()
 	var d = []byte("test string")
-	var data = storage.NewMetaDataObj("test", d, "default", 60)
+	var data = storage.NewMetaDataObj("test", d, "default", 60, 1)
 	coll.Put(&data)
 	res, ok := coll.Get("test")
 	if !ok {
@@ -30,7 +30,7 @@ func TestPutAndGetLoop(t *testing.T) {
 	coll := NewCollection()
 	for i:=0; i< 1000; i++ {
 		var d = []byte("test string")
-		var data = storage.NewMetaDataObj("testloopkey_"+strconv.Itoa(i), d, "default", 60)
+		var data = storage.NewMetaDataObj("testloopkey_"+strconv.Itoa(i), d, "default", 60, 1)
 		coll.Put(&data)
 	}
 	for i:=0; i< 1000; i++ {
@@ -49,7 +49,7 @@ func TestCount(t *testing.T) {
 	max := 1000
 	for i:=0; i< max; i++ {
 		var d = []byte("test string")
-		var data = storage.NewMetaDataObj("testloopkey_"+strconv.Itoa(i), d, "default", 60)
+		var data = storage.NewMetaDataObj("testloopkey_"+strconv.Itoa(i), d, "default", 60, 1)
 		coll.Put(&data)
 	}
 	var count = coll.Count()
@@ -67,7 +67,7 @@ func TestCountConcurrent(t *testing.T) {
 	for i:=0; i< max; i++ {
 		go func (j int){
 			var d = []byte("test string")
-			data := storage.NewMetaDataObj("testloopkey_"+strconv.Itoa(j), d, "default", 60)
+			data := storage.NewMetaDataObj("testloopkey_"+strconv.Itoa(j), d, "default", 60, 1)
 			coll.Put(&data)
 			//fmt.Println("Put data "+data.Key)
 		} (i)

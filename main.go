@@ -15,6 +15,7 @@ func init() {
 
 var ks storage.OvoStorage
 var incoming *processor.InCommandQueue
+var conf server.ServerConf
 var srv *server.Server
 
 func main(){
@@ -23,10 +24,11 @@ func main(){
 }
 
 func start() {
+	conf = server.LoadConfiguration("./conf/severconf.json")
 	log.Println("Start server node.")
 	ks = inmemory.NewInMemoryStorage()
 	incoming = processor.NewCommandQueue(ks)
-	srv = server.NewServer(nil, ks, incoming, nil, )
+	srv = server.NewServer(&conf, ks, incoming, nil, )
 	srv.Do()
 }
 

@@ -10,6 +10,7 @@ type MetaDataObj struct {
 	Collection string
 	CreationDate time.Time
 	TTL int
+	Hash int
 }
 
 type MetaDataUpdObj struct {
@@ -20,10 +21,12 @@ type MetaDataUpdObj struct {
 	Collection string
 	CreationDate time.Time
 	TTL int
+	Hash int
+	NewHash int
 }
 
-func NewMetaDataObj(key string, data []byte, collection string, ttl int) MetaDataObj {
-	return MetaDataObj{Key:key, Data:data, Collection:collection, CreationDate:time.Now(), TTL:ttl}
+func NewMetaDataObj(key string, data []byte, collection string, ttl int, hash int) MetaDataObj {
+	return MetaDataObj{Key:key, Data:data, Collection:collection, CreationDate:time.Now(), TTL:ttl, Hash:hash}
 }
 
 func (obj MetaDataObj) IsExpired() bool {
@@ -32,7 +35,7 @@ func (obj MetaDataObj) IsExpired() bool {
 }
 
 func (obj *MetaDataUpdObj) MetaDataObj() (*MetaDataObj) {
-	item := &MetaDataObj {Key:obj.Key, Data:obj.Data, Collection:obj.Collection, TTL:obj.TTL}
+	item := &MetaDataObj {Key:obj.Key, Data:obj.Data, Collection:obj.Collection, TTL:obj.TTL, Hash: obj.Hash}
 	return item
 }
 

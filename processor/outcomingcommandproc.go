@@ -6,4 +6,5 @@ import (
 
 type OutCommandQueue struct {
 	commands chan *command.Command
+	caller *NodeCaller
 }

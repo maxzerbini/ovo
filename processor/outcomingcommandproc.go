@@ -19,7 +19,7 @@ func NewOutCommandQueue(serverNode *cluster.ClusterTopologyNode, topology *clust
 	cq.commands = make(chan *command.Command, commands_buffer_size)
 	cq.serverNode = serverNode
 	cq.topology = topology
-	cq.caller = NewNodeCaller()
+	cq.caller = NewNodeCaller(serverNode.Node.Name)
 	go cq.backend()
 	return cq
 }

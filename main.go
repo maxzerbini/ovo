@@ -1,6 +1,7 @@
 package main
 
 import(
+	"github.com/maxzerbini/ovo/util"
 	"github.com/maxzerbini/ovo/storage"
 	"github.com/maxzerbini/ovo/inmemory"
 	"github.com/maxzerbini/ovo/processor"
@@ -24,8 +25,8 @@ func init() {
 
 func main(){
 	flag.Parse()
-	protect(start)
-	protect(stop)
+	util.Protect(start)
+	util.Protect(stop)
 }
 
 func start() {
@@ -42,12 +43,3 @@ func stop(){
 	log.Println("Stop server node.")
 }
 
-func protect(g func()) {
-	defer func() {
-		// Println executes normally even if there is a panic
-		if err := recover(); err != nil {
-			log.Println("run time panic: %v", err)
-		}
-	}()
-	g() // possible runtime-error
-}

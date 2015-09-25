@@ -9,13 +9,15 @@ import(
 )
 
 type NodeCaller struct {
+	Source string
 	Name string
 	clients map[string]*rpc.Client
 }
 
 // Create the node caller
-func NewNodeCaller() *NodeCaller {
+func NewNodeCaller(source string) *NodeCaller {
 	nc := new(NodeCaller)
+	nc.Source = source
 	nc.clients = make(map[string]*rpc.Client)
 	return nc
 }
@@ -23,9 +25,10 @@ func NewNodeCaller() *NodeCaller {
 // Execute remote operation on destination server
 func (nc *NodeCaller) ExecuteOperation(obj *storage.MetaDataUpdObj, destination *cluster.OvoNode, operation string){
 	defer func() {
-		// Println executes normally even if there is a panic
+		// executes normally even if there is a panic
 		if err := recover(); err != nil {
-			log.Println("run time panic: %v", err)
+			//remove the client
+			delete(nc.clients, destination.Name)
 		}
 	}()
 	var client *rpc.Client

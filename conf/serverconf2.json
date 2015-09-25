@@ -1,0 +1,1 @@
+{"ServerNode":{"Node":{"Name":"righel","HashRange":null,"Host":"0.0.0.0","Port":5060,"APIHost":"0.0.0.0","APIPort":5062,"Debug":true},"Twins":["mizard"]},"Topology":{"Nodes":[{"Node":{"Name":"mizard","HashRange":null,"Host":"127.0.0.1","Port":5050,"APIHost":"127.0.0.1","APIPort":5052,"Debug":true},"Twins":["righel"]}]}}

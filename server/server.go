@@ -4,6 +4,7 @@ import(
 	"github.com/maxzerbini/ovo/storage"
 	"github.com/maxzerbini/ovo/processor"
 	"github.com/maxzerbini/ovo/server/model"
+	"github.com/maxzerbini/ovo/command"
 	"net/http"
 	"strconv"
 	"github.com/gin-gonic/gin"
@@ -39,10 +40,10 @@ func (srv *Server) Do() {
 	router.POST("/ovo/keystorage/:key/updatekeyvalueifequal", srv.updateKeyAndValueIfEqual )
 	router.POST("/ovo/keystorage/:key/updatekey", srv.updateKey )
 	// Listen and server on 0.0.0.0:8080
-	if srv.config.Node.Debug {
+	if srv.config.ServerNode.Node.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else { gin.SetMode(gin.ReleaseMode) }
-    router.Run(srv.config.Node.Host+":"+strconv.Itoa(srv.config.Node.Port))
+    router.Run(srv.config.ServerNode.Node.Host+":"+strconv.Itoa(srv.config.ServerNode.Node.Port))
 }
 
 func (srv *Server) get (c *gin.Context) {
@@ -61,6 +62,7 @@ func (srv *Server) post (c *gin.Context) {
 	if c.BindJSON(&kv) == nil {
 		obj := model.NewMetaDataObj(&kv)
 		srv.keystorage.Put(obj)
+		srv.outcmdproc.Enqueu(&command.Command{OpCode:"put",Obj:obj.MetaDataUpdObj()})
 		c.JSON(http.StatusOK, model.NewOvoResponse("done", "0", nil))
 	} else {
 		c.JSON(http.StatusBadRequest, model.NewOvoResponse("error", "10", nil))
@@ -70,6 +72,7 @@ func (srv *Server) post (c *gin.Context) {
 func (srv *Server) delete (c *gin.Context) {
 	key := c.Param("key")
 	srv.keystorage.Delete(key);
+	srv.outcmdproc.Enqueu(&command.Command{OpCode:"delete",Obj:&storage.MetaDataUpdObj{Key:key}})
 	c.JSON(http.StatusOK, model.NewOvoResponse("done", "0", nil))
 }
 
@@ -77,6 +80,7 @@ func (srv *Server) getAndRemove (c *gin.Context) {
 	key := c.Param("key")
 	if res,err := srv.keystorage.GetAndRemove(key); err==nil {
 		obj := model.NewOvoKVResponse(res)
+		srv.outcmdproc.Enqueu(&command.Command{OpCode:"delete",Obj:&storage.MetaDataUpdObj{Key:key}})
 		result := model.NewOvoResponse("done", "0", obj)
 		c.JSON(http.StatusOK, result)
 	} else {
@@ -92,6 +96,7 @@ func (srv *Server) updateValueIfEqual (c *gin.Context) {
 		obj.Key = key
 		err := srv.keystorage.UpdateValueIfEqual(obj)
 		if err == nil {
+			srv.outcmdproc.Enqueu(&command.Command{OpCode:"updatevalue",Obj:obj})
 			c.JSON(http.StatusOK, model.NewOvoResponse("done", "0", nil))
 		} else {
 			c.JSON(http.StatusForbidden, model.NewOvoResponse("error", "103", nil))
@@ -109,6 +114,7 @@ func (srv *Server) updateKeyAndValueIfEqual (c *gin.Context) {
 		obj.Key = key
 		err := srv.keystorage.UpdateKeyAndValueIfEqual(obj)
 		if err == nil {
+			srv.outcmdproc.Enqueu(&command.Command{OpCode:"updatekeyvalue",Obj:obj})
 			c.JSON(http.StatusOK, model.NewOvoResponse("done", "0", nil))
 		} else {
 			c.JSON(http.StatusForbidden, model.NewOvoResponse("error", "104", nil))
@@ -126,6 +132,7 @@ func (srv *Server) updateKey(c *gin.Context) {
 		obj.Key = key
 		err := srv.keystorage.UpdateKey(obj)
 		if err == nil {
+			srv.outcmdproc.Enqueu(&command.Command{OpCode:"updatekey",Obj:obj})
 			c.JSON(http.StatusOK, model.NewOvoResponse("done", "0", nil))
 		} else {
 			c.JSON(http.StatusForbidden, model.NewOvoResponse("error", "105", nil))

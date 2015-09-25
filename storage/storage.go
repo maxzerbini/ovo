@@ -29,6 +29,10 @@ func NewMetaDataObj(key string, data []byte, collection string, ttl int, hash in
 	return MetaDataObj{Key:key, Data:data, Collection:collection, CreationDate:time.Now(), TTL:ttl, Hash:hash}
 }
 
+func (obj *MetaDataObj)MetaDataUpdObj() *MetaDataUpdObj {
+	return &MetaDataUpdObj{Key:obj.Key, Data:obj.Data, Collection:obj.Collection, CreationDate:obj.CreationDate, TTL:obj.TTL, Hash:obj.Hash, NewKey:"", NewData:make([]byte, 0)}
+}
+
 func (obj MetaDataObj) IsExpired() bool {
 	if obj.TTL == 0 { return false }
 	return time.Now().After(obj.CreationDate.Add(time.Duration(obj.TTL)*time.Second))

@@ -10,6 +10,7 @@ import(
 	"net/http"
 	"log"
 	"errors"
+	"strconv"
 )
 
 // The innser server implementation. Listen for incoming commands.
@@ -28,7 +29,7 @@ func NewInnerServer(conf *ServerConf, ks storage.OvoStorage, in *processor.InCom
 func (srv *InnerServer)Do(){
 	rpc.Register(srv)
 	rpc.HandleHTTP()
-	listener, e := net.Listen("tcp", ":1234")
+	listener, e := net.Listen("tcp", srv.config.ServerNode.Node.APIHost+":"+strconv.Itoa(srv.config.ServerNode.Node.APIPort))
 	if e != nil {
 		log.Fatal("Starting RPC-server -listen error:", e)
 	}
@@ -36,7 +37,7 @@ func (srv *InnerServer)Do(){
 }
 
 // Enqueue a remote command.
-func (srv *InnerServer) ExecuteCommand(rpccmd *command.RpcCommand, reply *int) (err error) {
+func (srv *InnerServer) ExecuteCommand(rpccmd command.RpcCommand, reply *int) (err error) {
 	defer func() {
 		// Executes normally even if there is a panic
 		if e:= recover(); e != nil {

@@ -9,11 +9,16 @@ type Command struct {
 	Obj *storage.MetaDataUpdObj
 }
 
+func (cmd Command) RpcCommand() (*RpcCommand){
+	return &RpcCommand{OpCode:cmd.OpCode, Obj:cmd.Obj}
+}
+
 type RpcCommand struct {
+	Source string
 	OpCode string
-	Obj storage.MetaDataUpdObj
+	Obj *storage.MetaDataUpdObj
 }
 
 func (rpccmd RpcCommand) Command() (*Command){
-	return &Command{OpCode:rpccmd.OpCode, Obj:&(rpccmd.Obj)}
+	return &Command{OpCode:rpccmd.OpCode, Obj:rpccmd.Obj}
 }

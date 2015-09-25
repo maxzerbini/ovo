@@ -11,7 +11,7 @@ import (
 const CONF_PATH string = "./conf/severconf.json"
 
 type ServerConf struct {
-	Node cluster.OvoNode
+	ServerNode cluster.ClusterTopologyNode
 	Topology cluster.ClusterTopology
 }
 

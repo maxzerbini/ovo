@@ -2,28 +2,58 @@ package processor
 import(
 	"github.com/maxzerbini/ovo/storage"
 	"github.com/maxzerbini/ovo/cluster"
+	"github.com/maxzerbini/ovo/command"
+	"log"
+	"net/rpc"
+	"strconv"
 )
 
 type NodeCaller struct {
-	// TODO
+	Name string
+	clients map[string]*rpc.Client
 }
 
-// Ask remote server to add the obj 
-func (nc *NodeCaller) Add(obj *storage.MetaDataObj, destination *cluster.OvoNode) {
-	// TODO
+// Create the node caller
+func NewNodeCaller() *NodeCaller {
+	nc := new(NodeCaller)
+	nc.clients = make(map[string]*rpc.Client)
+	return nc
 }
 
-// Ask remote server to delete the obj
-func (nc *NodeCaller) Delete(obj *storage.MetaDataObj, destination *cluster.OvoNode) {
-	// TODO
+// Execute remote operation on destination server
+func (nc *NodeCaller) ExecuteOperation(obj *storage.MetaDataUpdObj, destination *cluster.OvoNode, operation string){
+	defer func() {
+		// Println executes normally even if there is a panic
+		if err := recover(); err != nil {
+			log.Println("run time panic: %v", err)
+		}
+	}()
+	var client *rpc.Client
+	var ok bool
+	if client, ok = nc.clients[destination.Name]; !ok {
+		client = nc.createClient(destination)
+	}
+	rpccmd := &command.RpcCommand{Source:"test", OpCode:operation, Obj:obj}
+	var reply int = 0
+	err := client.Call("InnerServer.ExecuteCommand", rpccmd, &reply)
+	if err != nil {
+		log.Println("InnerServer.ExecuteCommand error: ", err)
+	}
 }
 
-// Ask remote server to touch the obj
-func (nc *NodeCaller) Touch(obj *storage.MetaDataObj, destination *cluster.OvoNode) {
-	// TODO
-}
-
-// Ask remote server to change the obj
-func (nc *NodeCaller) Change(obj *storage.MetaDataUpdObj, destination *cluster.OvoNode) {
-	// TODO
+func (nc *NodeCaller) createClient(destination *cluster.OvoNode) *rpc.Client{
+	defer func() {
+		// Println executes normally even if there is a panic
+		if err := recover(); err != nil {
+			log.Println("run time panic: %v", err)
+		}
+	}()
+	client, err := rpc.DialHTTP("tcp", destination.APIHost + ":"+strconv.Itoa(destination.APIPort))
+	if err != nil {
+		log.Printf("dialing: %v \r\n", err)
+		return nil
+	} else {
+		nc.clients[destination.Name] = client
+		return client
+	}
 }

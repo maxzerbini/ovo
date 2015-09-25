@@ -23,7 +23,7 @@ func NewNodeCaller(source string) *NodeCaller {
 }
 
 // Execute remote operation on destination server
-func (nc *NodeCaller) ExecuteOperation(obj *storage.MetaDataUpdObj, destination *cluster.OvoNode, operation string){
+func (nc *NodeCaller) ExecuteOperation(obj *storage.MetaDataUpdObj, destination *cluster.OvoNode, operation string) error {
 	defer func() {
 		// executes normally even if there is a panic
 		if err := recover(); err != nil {
@@ -42,6 +42,7 @@ func (nc *NodeCaller) ExecuteOperation(obj *storage.MetaDataUpdObj, destination 
 	if err != nil {
 		log.Println("InnerServer.ExecuteCommand error: ", err)
 	}
+	return err
 }
 
 func (nc *NodeCaller) createClient(destination *cluster.OvoNode) *rpc.Client{

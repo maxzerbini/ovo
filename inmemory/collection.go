@@ -12,6 +12,7 @@ type InMemoryCollection struct {
 	storage map[string]*storage.MetaDataObj
 	commands chan func()
 }
+
 // Execute the commands in serie.
 func (coll *InMemoryCollection) execCmd() {
 	for f := range coll.commands {
@@ -148,7 +149,7 @@ func (coll *InMemoryCollection) Iterate() ([]*storage.MetaDataObj){
 }
 
 // Remove the item of the collection
-func (coll *InMemoryCollection) Expired() ([]*storage.MetaDataObj){
+func (coll *InMemoryCollection) ListExpired() ([]*storage.MetaDataObj){
 	retChan := make(chan int)
 	defer close(retChan)
 	list := make([]*storage.MetaDataObj, 10)

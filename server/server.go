@@ -53,7 +53,7 @@ func (srv *Server) get (c *gin.Context) {
 		result := model.NewOvoResponse("done", "0", obj)
 		c.JSON(http.StatusOK, result)
 	} else {
-		c.JSON(http.StatusBadRequest, model.NewOvoResponse("error", "101", nil))
+		c.JSON(http.StatusNotFound, model.NewOvoResponse("error", "101", nil))
 	}
 }
 

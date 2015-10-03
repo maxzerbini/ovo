@@ -11,12 +11,14 @@ import (
 // The InMemoryStorage struct implements the OvoStorage interface. 
 type InMemoryStorage struct {
 	collection *InMemoryCollection
+	cleaner *Cleaner
 }
 
 // Create a InMemoryStorage.
 func NewInMemoryStorage()(*InMemoryStorage){
 	ks := new(InMemoryStorage)
 	ks.collection = NewCollection()
+	ks.cleaner = NewCleaner(ks, 60)
 	return ks
 }
 
@@ -31,6 +33,9 @@ func (ks *InMemoryStorage) Put(obj *storage.MetaDataObj) (error){
 		}
 		obj.CreationDate = time.Now()
 		ks.collection.Put(obj)
+		if obj.TTL > 0 {
+			go ks.cleaner.AddElement(obj)
+		}
 	}
 	return errors.New("Object is null.")
 }
@@ -121,4 +126,8 @@ func (ks *InMemoryStorage) Touch(key string) {
 // Count the keys in the storage.
 func (ks *InMemoryStorage) Count() (int){
 	return ks.collection.Count()
+}
+
+func (ks *InMemoryStorage) ListExpired()(elements []*storage.MetaDataObj) {
+	return ks.collection.ListExpired()
 }

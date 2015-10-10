@@ -53,4 +53,5 @@ type OvoStorage interface {
 	UpdateKey(obj *MetaDataUpdObj) (error)
 	Touch(key string)
 	Count() (int)
+	List() ([]*MetaDataObj)
 }

@@ -45,6 +45,28 @@ func (nc *NodeCaller) ExecuteOperation(obj *storage.MetaDataUpdObj, destination 
 	return err
 }
 
+// Ask the destination to register the node
+func (nc *NodeCaller) RegisterNode(node *cluster.ClusterTopologyNode, destination *cluster.OvoNode) (*cluster.ClusterTopology, error) {
+	defer func() {
+		// executes normally even if there is a panic
+		if err := recover(); err != nil {
+			//remove the client
+			delete(nc.clients, destination.Name)
+		}
+	}()
+	var client *rpc.Client
+	var ok bool
+	var reply *cluster.ClusterTopology
+	if client, ok = nc.clients[destination.Name]; !ok {
+		client = nc.createClient(destination)
+	}
+	err := client.Call("InnerServer.RegisterNode", node, &reply)
+	if err != nil {
+		log.Println("InnerServer.RegisterNode error: ", err)
+	}
+	return reply, err
+}
+
 func (nc *NodeCaller) createClient(destination *cluster.OvoNode) *rpc.Client{
 	defer func() {
 		// Println executes normally even if there is a panic

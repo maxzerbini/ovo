@@ -18,11 +18,12 @@ type InnerServer struct {
 	keystorage storage.OvoStorage
 	incmdproc *processor.InCommandQueue
 	config *ServerConf	
+	partitioner *processor.Partitioner
 }
 
 // Creata a new inner server.
-func NewInnerServer(conf *ServerConf, ks storage.OvoStorage, in *processor.InCommandQueue) *InnerServer{
-	return &InnerServer{keystorage:ks, incmdproc:in, config:conf}
+func NewInnerServer(conf *ServerConf, ks storage.OvoStorage, in *processor.InCommandQueue, out *processor.OutCommandQueue, partitioner *processor.Partitioner) *InnerServer{
+	return &InnerServer{keystorage:ks, incmdproc:in, config:conf, partitioner:partitioner}
 }
 
 // Start listening commands.
@@ -52,7 +53,7 @@ func (srv *InnerServer) ExecuteCommand(rpccmd command.RpcCommand, reply *int) (e
 }
 
 // Register a new node in the cluster.
-func (srv *InnerServer) RegisterNode(node *cluster.OvoNode, reply *cluster.ClusterTopology) (err error) {
+func (srv *InnerServer) RegisterNode(node *cluster.ClusterTopologyNode, reply *cluster.ClusterTopology) (err error) {
 	defer func() {
 		// Executes normally even if there is a panic
 		if e:= recover(); e != nil {
@@ -61,8 +62,10 @@ func (srv *InnerServer) RegisterNode(node *cluster.OvoNode, reply *cluster.Clust
 			err = errors.New("Runtime error.")
 		}
 	}()
-	//TODO
+	srv.config.Topology.AddNode(node)
 	*reply = srv.config.Topology
+	// start data partitioner
+	go srv.partitioner.MoveData() 
 	return nil
 }
 
@@ -76,7 +79,11 @@ func (srv *InnerServer) UpdateTopology(topology *cluster.ClusterTopology, reply 
 			err = errors.New("Runtime error.")
 		}
 	}()
-	//TODO
+	for _,node:= range topology.Nodes {
+		srv.config.Topology.AddNode(node)
+	}
 	*reply = srv.config.Topology
+	// start data partitioner
+	go srv.partitioner.MoveData()
 	return nil
 }

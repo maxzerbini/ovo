@@ -1,10 +1,10 @@
 package server
 
 import (
-	"github.com/maxzerbini/ovo/cluster"
+	//"github.com/maxzerbini/ovo/cluster"
 	"testing"
 )
-
+/*
 func TestConfigurationWrite(t *testing.T) {
 	t.Log("TestConfigurationWrite started")
 	var conf ServerConf
@@ -19,9 +19,11 @@ func TestConfigurationWrite(t *testing.T) {
 	conf.Topology.Nodes = append(conf.Topology.Nodes, *topoNode2)
 	WriteConfiguration("../conf/serverconf.json", conf)
 }
+*/
 
 func TestConfigurationLoad(t *testing.T) {
 	t.Log("TestConfigurationLoad started")
 	var conf = LoadConfiguration("../conf/serverconf.json")
 	t.Logf("conf = %s", conf)
+	conf.Init()
 }

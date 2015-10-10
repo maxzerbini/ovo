@@ -56,6 +56,11 @@ func (ks *InMemoryStorage) Delete(key string) {
 	ks.collection.Delete(key)
 }
 
+// Remove the item of the storage
+func (ks *InMemoryStorage) DeleteExpired(key string) {
+	ks.collection.DeleteExpired(key)
+}
+
 // Get an item and remove it from the storage in a single operation.
 func (ks *InMemoryStorage) GetAndRemove(key string) (*storage.MetaDataObj, error) {
 	if obj, ok := ks.collection.GetAndRemove(key); ok {
@@ -126,6 +131,10 @@ func (ks *InMemoryStorage) Touch(key string) {
 // Count the keys in the storage.
 func (ks *InMemoryStorage) Count() (int){
 	return ks.collection.Count()
+}
+
+func (ks *InMemoryStorage) List() ([]*storage.MetaDataObj){
+	return ks.collection.List()
 }
 
 func (ks *InMemoryStorage) ListExpired()(elements []*storage.MetaDataObj) {

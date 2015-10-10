@@ -15,12 +15,14 @@ type Server struct {
 	incmdproc *processor.InCommandQueue
 	outcmdproc *processor.OutCommandQueue
 	config *ServerConf	
+	partitioner *processor.Partitioner
 	innerServer *InnerServer
 }
 
 func NewServer(conf *ServerConf, ks storage.OvoStorage, in *processor.InCommandQueue, out *processor.OutCommandQueue) *Server {
 	srv := &Server{keystorage:ks, incmdproc:in, outcmdproc:out, config:conf}
-	srv.innerServer = NewInnerServer(conf, ks, in)
+	srv.partitioner = processor.NewPartitioner(ks, &conf.ServerNode, out)
+	srv.innerServer = NewInnerServer(conf, ks, in, out, srv.partitioner)
 	return srv
 }
 

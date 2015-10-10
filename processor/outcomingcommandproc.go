@@ -13,15 +13,17 @@ type OutCommandQueue struct {
 	serverNode *cluster.ClusterTopologyNode
 	topology *cluster.ClusterTopology
 	caller *NodeCaller
+	incomingQueue *InCommandQueue
 }
 
 // Create the outcoming command processor queue
-func NewOutCommandQueue(serverNode *cluster.ClusterTopologyNode, topology *cluster.ClusterTopology) *OutCommandQueue {
+func NewOutCommandQueue(serverNode *cluster.ClusterTopologyNode, topology *cluster.ClusterTopology, incomingQueue *InCommandQueue) *OutCommandQueue {
 	cq := new(OutCommandQueue)
 	cq.commands = make(chan *command.Command, commands_buffer_size)
 	cq.errors = make(chan *commandError, commands_buffer_size)
 	cq.serverNode = serverNode
 	cq.topology = topology
+	cq.incomingQueue = incomingQueue
 	cq.caller = NewNodeCaller(serverNode.Node.Name)
 	go cq.backend()
 	go cq.errorBackend()
@@ -63,6 +65,8 @@ func (cq *OutCommandQueue) move(obj *storage.MetaDataUpdObj){
 		err := cq.caller.ExecuteOperation(obj, &node.Node, "put")
 		if err != nil {
 			cq.enqueuError(newCommandError(obj, &node.Node, "put"))
+		} else {
+			cq.incomingQueue.Enqueu(&command.Command{OpCode:"delete",Obj:obj})
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"time"
 	"github.com/maxzerbini/ovo/cluster"
 	"encoding/json"
     "io/ioutil"
@@ -15,8 +16,9 @@ type ServerConf struct {
 	Topology cluster.ClusterTopology
 }
 
-func ( cnf *ServerConf) AppendNewNode(node *cluster.OvoNode) { 
-	
+func ( cnf *ServerConf) Init() { 
+	cnf.ServerNode.StartDate = time.Now()
+	cnf.Topology.AddNode(&cnf.ServerNode)
 }
 
 func LoadConfiguration(path string) ServerConf {

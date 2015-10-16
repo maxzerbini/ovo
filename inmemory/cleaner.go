@@ -5,7 +5,7 @@ import(
 	"time"
 	"log"
 )
-
+// Cleaner removes expired elements from the storage
 type Cleaner struct {
 	ks *InMemoryStorage
 	period int64 // secs
@@ -16,6 +16,7 @@ type Cleaner struct {
 	commands chan func()
 }
 
+// Create a new Cleaner
 func NewCleaner(ks *InMemoryStorage, period int64)(cl *Cleaner) {
 	if period < 60 { period = 60}
 	cl = &Cleaner{}
@@ -38,6 +39,7 @@ func (cl *Cleaner) execCmd() {
 	}
 }
 
+// Clean expired elements periodically
 func (cl *Cleaner) clean() {
 	for {
         select {
@@ -47,7 +49,6 @@ func (cl *Cleaner) clean() {
             return
       }
     }
-
 }
 
 // Stop the cleaner
@@ -75,18 +76,18 @@ func (cl *Cleaner) RemoveExpiredElements(){
 	if list, ok := cl.expirables[cl.step]; ok {
 		for _, obj := range list {
 			if obj.IsExpired() {
-				log.Printf("Remove expired element of key: %s\r\n",obj.Key)
-				cl.ks.Delete(obj.Key)
+				//log.Printf("Remove expired element of key: %s\r\n",obj.Key)
+				cl.ks.DeleteExpired(obj.Key)
 			} else {
-				log.Printf("Sheduled clean for element of key: %s\r\n",obj.Key)
+				//log.Printf("Sheduled clean for element of key: %s\r\n",obj.Key)
 				cl.AddElement(obj)
 			}
 		}
-		log.Printf("Remove expired elements: %d\r\n",len(list))
+		log.Printf("Expired elements removed: %d\r\n",len(list))
 	} else {
-		log.Printf("List for step %d is void %d\r\n",cl.step, len(list))
+		//log.Printf("List for step %d is void %d\r\n",cl.step, len(list))
 	}
-	step := cl.step
+	step := cl.step // clone step before increasing its value
 	cl.commands <- func() {
 		delete(cl.expirables,step)
 	}

@@ -17,6 +17,7 @@ type OvoKVRequest struct {
 	Data []byte
 	Collection string
 	TTL int
+	Hash int
 }
 
 type OvoKVUpdateRequest struct {
@@ -24,6 +25,7 @@ type OvoKVUpdateRequest struct {
 	NewKey string
 	Data []byte
 	NewData []byte
+	NewHash int
 }
 
 type OvoKVResponse struct {
@@ -46,6 +48,7 @@ func NewMetaDataObj(req *OvoKVRequest) *storage.MetaDataObj {
 	obj.Data = req.Data
 	obj.Collection = req.Collection
 	obj.TTL = req.TTL
+	obj.Hash = req.Hash
 	return obj
 }
 
@@ -55,5 +58,6 @@ func NewMetaDataUpdObj(req *OvoKVUpdateRequest) *storage.MetaDataUpdObj {
 	obj.NewKey = req.NewKey
 	obj.Data = req.Data
 	obj.NewData = req.NewData
+	obj.Hash = req.NewHash
 	return obj
 }

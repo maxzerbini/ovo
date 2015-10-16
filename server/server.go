@@ -1,10 +1,15 @@
 package server
 
+import (
+	"log"
+)
+
 import(
 	"github.com/maxzerbini/ovo/storage"
 	"github.com/maxzerbini/ovo/processor"
 	"github.com/maxzerbini/ovo/server/model"
 	"github.com/maxzerbini/ovo/command"
+	"github.com/maxzerbini/ovo/cluster"
 	"net/http"
 	"strconv"
 	"github.com/gin-gonic/gin"
@@ -15,12 +20,14 @@ type Server struct {
 	incmdproc *processor.InCommandQueue
 	outcmdproc *processor.OutCommandQueue
 	config *ServerConf	
+	partitioner *processor.Partitioner
 	innerServer *InnerServer
 }
 
 func NewServer(conf *ServerConf, ks storage.OvoStorage, in *processor.InCommandQueue, out *processor.OutCommandQueue) *Server {
 	srv := &Server{keystorage:ks, incmdproc:in, outcmdproc:out, config:conf}
-	srv.innerServer = NewInnerServer(conf, ks, in)
+	srv.partitioner = processor.NewPartitioner(ks, &conf.ServerNode, out)
+	srv.innerServer = NewInnerServer(conf, ks, in, out, srv.partitioner)
 	return srv
 }
 
@@ -31,6 +38,7 @@ func (srv *Server) Do() {
     // Global middleware
     router.Use(gin.Logger())
     router.Use(gin.Recovery())
+	router.GET("/ovo/keystorage", srv.count)
 	router.GET("/ovo/keystorage/:key", srv.get )
 	router.POST("/ovo/keystorage", srv.post )
 	router.PUT("/ovo/keystorage", srv.post )
@@ -39,11 +47,44 @@ func (srv *Server) Do() {
 	router.POST("/ovo/keystorage/:key/updatevalueifequal", srv.updateValueIfEqual )
 	router.POST("/ovo/keystorage/:key/updatekeyvalueifequal", srv.updateKeyAndValueIfEqual )
 	router.POST("/ovo/keystorage/:key/updatekey", srv.updateKey )
-	// Listen and server on 0.0.0.0:8080
 	if srv.config.ServerNode.Node.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else { gin.SetMode(gin.ReleaseMode) }
-    router.Run(srv.config.ServerNode.Node.Host+":"+strconv.Itoa(srv.config.ServerNode.Node.Port))
+    // register this node in the cluster
+	srv.registerServer()
+	// Listen and server on Host:Port
+	router.Run(srv.config.ServerNode.Node.Host+":"+strconv.Itoa(srv.config.ServerNode.Node.Port))
+}
+
+func (srv *Server) registerServer() {
+	topologies := make([]*cluster.ClusterTopology,0)
+	nodes := make([]*cluster.ClusterTopologyNode,0)
+	for _, node := range srv.config.Topology.Nodes {
+		if node.Node.Name != srv.config.ServerNode.Node.Name {
+			if topology, err := srv.outcmdproc.Caller.RegisterNode(&srv.config.ServerNode, &node.Node); err == nil && topology != nil{
+				log.Printf("Registration was successful on node %s\r\n", node.Node.Name)
+				topologies = append(topologies, topology)
+			} else {
+				log.Printf("Registration failed on node %s\r\n", node.Node.Name)
+				nodes = append(nodes, node)
+			}
+		}
+	}
+	// remove failed nodes
+	for _,node := range nodes {
+		srv.config.Topology.RemoveNode(node.Node.Name)
+	}
+	// merge 
+	for _, topology := range topologies {
+		srv.config.Topology.Merge(topology)
+	}
+	srv.config.WriteTmp()
+}
+
+func (srv *Server) count (c *gin.Context) {
+	res:= srv.keystorage.Count()
+	result := model.NewOvoResponse("done", "0", res)
+	c.JSON(http.StatusOK, result)
 }
 
 func (srv *Server) get (c *gin.Context) {

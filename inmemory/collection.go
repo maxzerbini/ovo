@@ -58,6 +58,17 @@ func (coll *InMemoryCollection) Delete(key string) {
 	coll.commands <- func() { delete(coll.storage, key) }
 }
 
+// Remove the item of the collection
+func (coll *InMemoryCollection) DeleteExpired(key string) {
+	coll.commands <- func() { 
+		if ret, ok := coll.storage[key]; ok {
+			if ret.IsExpired() {
+				delete(coll.storage, key)
+			} 
+		}
+	}
+}
+
 // Get an item and remove it from the collection in a single operation.
 func (coll *InMemoryCollection) GetAndRemove(key string) (*storage.MetaDataObj, bool)  {
 	retChan := make(chan *storage.MetaDataObj)
@@ -133,14 +144,16 @@ func (coll *InMemoryCollection) Touch(key string, updateDate time.Time ) {
 	}
 }
 
-// Remove the item of the collection
-func (coll *InMemoryCollection) Iterate() ([]*storage.MetaDataObj){
+// List the items of the collection
+func (coll *InMemoryCollection) List() ([]*storage.MetaDataObj){
 	retChan := make(chan int)
 	defer close(retChan)
-	list := make([]*storage.MetaDataObj, 10)
+	list := make([]*storage.MetaDataObj, 0)
 	coll.commands <- func() { 
 		for _, val := range coll.storage {
-			list = append(list, val)
+			if !val.IsExpired() {
+				list = append(list, val)
+			}
 		}
 		retChan <- 1
 	}
@@ -148,11 +161,11 @@ func (coll *InMemoryCollection) Iterate() ([]*storage.MetaDataObj){
 	return list
 }
 
-// Remove the item of the collection
+// List the expired items of the collection
 func (coll *InMemoryCollection) ListExpired() ([]*storage.MetaDataObj){
 	retChan := make(chan int)
 	defer close(retChan)
-	list := make([]*storage.MetaDataObj, 10)
+	list := make([]*storage.MetaDataObj, 0)
 	coll.commands <- func() { 
 		for _, val := range coll.storage {
 			if val.IsExpired() {

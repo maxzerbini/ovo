@@ -17,24 +17,29 @@ var outcmdproc *processor.OutCommandQueue
 var conf server.ServerConf
 var srv *server.Server
 var configPath string = "./conf/serverconf.json"
+var configPathTemp string = "./conf/serverconf.json.temp"
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	flag.StringVar(&configPath, "conf", "./conf/serverconf.json", "path of the file severconf.json")
 }
 
+// Start the Ovo Key/Value Storage
 func main(){
 	flag.Parse()
+	configPathTemp = configPath + ".temp"
 	util.Protect(start)
 	util.Protect(stop)
 }
 
+// Start the server node
 func start() {
 	conf = server.LoadConfiguration(configPath)
+	conf.Init(configPathTemp)
 	log.Println("Start server node.")
 	ks = inmemory.NewInMemoryStorage()
 	incoming = processor.NewCommandQueue(ks)
-	outcmdproc = processor.NewOutCommandQueue(&conf.ServerNode, &conf.Topology)
+	outcmdproc = processor.NewOutCommandQueue(&conf.ServerNode, &conf.Topology, incoming)
 	srv = server.NewServer(&conf, ks, incoming, outcmdproc )
 	srv.Do()
 }

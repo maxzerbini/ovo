@@ -1,6 +1,7 @@
 package server
 
 import (
+	"time"
 	"github.com/maxzerbini/ovo/cluster"
 	"encoding/json"
     "io/ioutil"
@@ -13,10 +14,17 @@ const CONF_PATH string = "./conf/severconf.json"
 type ServerConf struct {
 	ServerNode cluster.ClusterTopologyNode
 	Topology cluster.ClusterTopology
+	tmpPath string
 }
 
-func ( cnf *ServerConf) AppendNewNode(node *cluster.OvoNode) { 
-	
+func ( cnf *ServerConf) Init(tmpPath string) { 
+	cnf.ServerNode.StartDate = time.Now()
+	cnf.Topology.AddNode(&cnf.ServerNode)
+	cnf.tmpPath = tmpPath
+}
+
+func ( cnf *ServerConf) WriteTmp() { 
+	WriteConfiguration(cnf.tmpPath, *cnf)
 }
 
 func LoadConfiguration(path string) ServerConf {
@@ -34,6 +42,6 @@ func WriteConfiguration(path string, conf ServerConf) {
 	data, _ := json.Marshal(conf)
 	e := ioutil.WriteFile(path, data, 0x666)
     if e != nil {
-		log.Fatalf("Configuration file write error at %s", path)
+		log.Printf("Configuration file write error at %s\r\n", path)
     }
 }

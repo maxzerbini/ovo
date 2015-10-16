@@ -12,17 +12,19 @@ type OutCommandQueue struct {
 	errors chan *commandError
 	serverNode *cluster.ClusterTopologyNode
 	topology *cluster.ClusterTopology
-	caller *NodeCaller
+	Caller *NodeCaller
+	incomingQueue *InCommandQueue
 }
 
 // Create the outcoming command processor queue
-func NewOutCommandQueue(serverNode *cluster.ClusterTopologyNode, topology *cluster.ClusterTopology) *OutCommandQueue {
+func NewOutCommandQueue(serverNode *cluster.ClusterTopologyNode, topology *cluster.ClusterTopology, incomingQueue *InCommandQueue) *OutCommandQueue {
 	cq := new(OutCommandQueue)
 	cq.commands = make(chan *command.Command, commands_buffer_size)
 	cq.errors = make(chan *commandError, commands_buffer_size)
 	cq.serverNode = serverNode
 	cq.topology = topology
-	cq.caller = NewNodeCaller(serverNode.Node.Name)
+	cq.incomingQueue = incomingQueue
+	cq.Caller = NewNodeCaller(serverNode.Node.Name)
 	go cq.backend()
 	go cq.errorBackend()
 	return cq
@@ -51,7 +53,7 @@ func (cq *OutCommandQueue) backend() {
 
 func (cq *OutCommandQueue) execute(obj *storage.MetaDataUpdObj, operation string){
 	for _, node := range cq.topology.GetTwins(cq.serverNode.Twins){
-		err := cq.caller.ExecuteOperation(obj, &node.Node, operation)
+		err := cq.Caller.ExecuteOperation(obj, &node.Node, operation)
 		if err != nil {
 			cq.enqueuError(newCommandError(obj, &node.Node, operation))
 		}
@@ -60,9 +62,11 @@ func (cq *OutCommandQueue) execute(obj *storage.MetaDataUpdObj, operation string
 
 func (cq *OutCommandQueue) move(obj *storage.MetaDataUpdObj){
 	if node := cq.topology.GetNodeByHash(obj.Hash); node != nil {
-		err := cq.caller.ExecuteOperation(obj, &node.Node, "put")
+		err := cq.Caller.ExecuteOperation(obj, &node.Node, "put")
 		if err != nil {
 			cq.enqueuError(newCommandError(obj, &node.Node, "put"))
+		} else {
+			cq.incomingQueue.Enqueu(&command.Command{OpCode:"delete",Obj:obj})
 		}
 	}
 }
@@ -90,7 +94,7 @@ func (cq *OutCommandQueue) errorBackend() {
 	for  cmd := range cq.errors {
 		if cmd != nil{
 			if cmd.count < 4 {
-				err := cq.caller.ExecuteOperation(cmd.obj, cmd.destination, cmd.operation)
+				err := cq.Caller.ExecuteOperation(cmd.obj, cmd.destination, cmd.operation)
 				if err != nil {
 					cq.enqueuError(cmd)
 				}

@@ -4,7 +4,6 @@ import(
 	"github.com/maxzerbini/ovo/util"
 	"github.com/maxzerbini/ovo/storage"
 	"github.com/maxzerbini/ovo/inmemory"
-	"github.com/maxzerbini/ovo/processor"
 	"github.com/maxzerbini/ovo/server"
 	"log"
 	"runtime"
@@ -12,8 +11,6 @@ import(
 )
 
 var ks storage.OvoStorage
-var incoming *processor.InCommandQueue
-var outcmdproc *processor.OutCommandQueue
 var conf server.ServerConf
 var srv *server.Server
 var configPath string = "./conf/serverconf.json"
@@ -38,9 +35,7 @@ func start() {
 	conf.Init(configPathTemp)
 	log.Println("Start server node.")
 	ks = inmemory.NewInMemoryStorage()
-	incoming = processor.NewCommandQueue(ks)
-	outcmdproc = processor.NewOutCommandQueue(&conf.ServerNode, &conf.Topology, incoming)
-	srv = server.NewServer(&conf, ks, incoming, outcmdproc )
+	srv = server.NewServer(&conf, ks)
 	srv.Do()
 }
 

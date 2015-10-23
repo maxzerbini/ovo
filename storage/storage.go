@@ -54,4 +54,5 @@ type OvoStorage interface {
 	Touch(key string)
 	Count() (int)
 	List() ([]*MetaDataObj)
+	Keys() ([]string)
 }

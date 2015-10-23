@@ -30,3 +30,12 @@ func (p *Partitioner) MoveData(){
 		}
 	}
 }
+
+func (p *Partitioner) MoveObject(obj *storage.MetaDataObj){
+	if (obj != nil) {
+		if !util.Contains(p.serverNode.Node.HashRange, obj.Hash) {
+			log.Printf("Moving key = %s\r\n", obj.Key)
+			p.outcomingQueue.Enqueu(&command.Command{OpCode:"move",Obj:obj.MetaDataUpdObj()})	
+		}
+	}
+}

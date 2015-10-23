@@ -109,6 +109,7 @@ func (coll *InMemoryCollection) UpdateKeyAndValueIfEqual(obj *storage.MetaDataUp
 				delete(coll.storage, obj.Key)
 				ret.Data = obj.NewData
 				ret.Key = obj.NewKey
+				ret.Hash = obj.NewHash
 				ret.CreationDate = obj.CreationDate
 				coll.storage[obj.NewKey]= ret
 			}
@@ -123,6 +124,7 @@ func (coll *InMemoryCollection) UpdateKey(obj *storage.MetaDataUpdObj) {
 			delete(coll.storage, obj.Key)
 			ret.Key = obj.NewKey
 			ret.CreationDate = obj.CreationDate
+			ret.Hash = obj.NewHash
 			coll.storage[obj.NewKey]= ret
 		} 
 	}
@@ -144,7 +146,24 @@ func (coll *InMemoryCollection) Touch(key string, updateDate time.Time ) {
 	}
 }
 
-// List the items of the collection
+// List the keys of the items in the collection
+func (coll *InMemoryCollection) Keys() ([]string){
+	retChan := make(chan int)
+	defer close(retChan)
+	list := make([]string, 0)
+	coll.commands <- func() { 
+		for _, val := range coll.storage {
+			if !val.IsExpired() {
+				list = append(list, val.Key)
+			}
+		}
+		retChan <- 1
+	}
+	<- retChan //wait for result
+	return list
+}
+
+// List the items in the collection
 func (coll *InMemoryCollection) List() ([]*storage.MetaDataObj){
 	retChan := make(chan int)
 	defer close(retChan)

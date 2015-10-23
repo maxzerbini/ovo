@@ -4,6 +4,7 @@ import (
 	"github.com/maxzerbini/ovo/storage"
 	"github.com/maxzerbini/ovo/command"
 	"github.com/maxzerbini/ovo/cluster"
+	"github.com/maxzerbini/ovo/util"
 	"time"
 )
 
@@ -42,8 +43,8 @@ func (cq *OutCommandQueue) backend() {
 				case "delete" : cq.execute(cmd.Obj, cmd.OpCode)
 				case "touch" : cq.execute(cmd.Obj, cmd.OpCode)
 				case "updatevalue" : cq.execute(cmd.Obj, cmd.OpCode)
-				case "updatekey" : cq.execute(cmd.Obj, cmd.OpCode)
-				case "updatekeyvalue" : cq.execute(cmd.Obj, cmd.OpCode)
+				case "updatekey" : cq.executeUpdateKey(cmd.Obj, cmd.OpCode)
+				case "updatekeyvalue" : cq.executeUpdateKey(cmd.Obj, cmd.OpCode)
 				case "move" : cq.move(cmd.Obj)
 				default : println("usupported command: "+cmd.OpCode)
 			}	
@@ -60,11 +61,33 @@ func (cq *OutCommandQueue) execute(obj *storage.MetaDataUpdObj, operation string
 	}
 }
 
+func (cq *OutCommandQueue) executeUpdateKey(obj *storage.MetaDataUpdObj, operation string){
+	if !util.Contains(cq.serverNode.Node.HashRange, obj.NewHash) {
+		// delete the data on the twins
+		for _, node := range cq.topology.GetTwins(cq.serverNode.Twins){
+			err := cq.Caller.ExecuteOperation(obj, &node.Node, "delete")
+			if err != nil {
+				cq.enqueuError(newCommandError(obj, &node.Node, "delete"))
+			}
+		}
+		// move the data because the new hashcode does not belong to this node
+		cq.move(obj)
+	} else {
+		// update data on the twins
+		for _, node := range cq.topology.GetTwins(cq.serverNode.Twins){
+			err := cq.Caller.ExecuteOperation(obj, &node.Node, operation)
+			if err != nil {
+				cq.enqueuError(newCommandError(obj, &node.Node, operation))
+			}
+		}
+	}
+}
+
 func (cq *OutCommandQueue) move(obj *storage.MetaDataUpdObj){
 	if node := cq.topology.GetNodeByHash(obj.Hash); node != nil {
-		err := cq.Caller.ExecuteOperation(obj, &node.Node, "put")
+		err := cq.Caller.ExecuteOperation(obj, &node.Node, "move")
 		if err != nil {
-			cq.enqueuError(newCommandError(obj, &node.Node, "put"))
+			cq.enqueuError(newCommandError(obj, &node.Node, "move"))
 		} else {
 			cq.incomingQueue.Enqueu(&command.Command{OpCode:"delete",Obj:obj})
 		}

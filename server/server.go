@@ -24,10 +24,12 @@ type Server struct {
 	innerServer *InnerServer
 }
 
-func NewServer(conf *ServerConf, ks storage.OvoStorage, in *processor.InCommandQueue, out *processor.OutCommandQueue) *Server {
-	srv := &Server{keystorage:ks, incmdproc:in, outcmdproc:out, config:conf}
-	srv.partitioner = processor.NewPartitioner(ks, &conf.ServerNode, out)
-	srv.innerServer = NewInnerServer(conf, ks, in, out, srv.partitioner)
+func NewServer(conf *ServerConf, ks storage.OvoStorage) *Server {
+	srv := &Server{keystorage:ks, config:conf}
+	srv.incmdproc = processor.NewCommandQueue(ks)
+	srv.outcmdproc = processor.NewOutCommandQueue(&conf.ServerNode, &conf.Topology, srv.incmdproc)
+	srv.partitioner = processor.NewPartitioner(ks, &conf.ServerNode, srv.outcmdproc)
+	srv.innerServer = NewInnerServer(conf, ks, srv.incmdproc, srv.outcmdproc, srv.partitioner)
 	return srv
 }
 
@@ -39,6 +41,7 @@ func (srv *Server) Do() {
     router.Use(gin.Logger())
     router.Use(gin.Recovery())
 	router.GET("/ovo/keystorage", srv.count)
+	router.GET("/ovo/keys", srv.keys)
 	router.GET("/ovo/keystorage/:key", srv.get )
 	router.POST("/ovo/keystorage", srv.post )
 	router.PUT("/ovo/keystorage", srv.post )
@@ -47,6 +50,7 @@ func (srv *Server) Do() {
 	router.POST("/ovo/keystorage/:key/updatevalueifequal", srv.updateValueIfEqual )
 	router.POST("/ovo/keystorage/:key/updatekeyvalueifequal", srv.updateKeyAndValueIfEqual )
 	router.POST("/ovo/keystorage/:key/updatekey", srv.updateKey )
+	router.GET("/ovo/cluster", srv.getTopology )
 	if srv.config.ServerNode.Node.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else { gin.SetMode(gin.ReleaseMode) }
@@ -83,6 +87,13 @@ func (srv *Server) registerServer() {
 
 func (srv *Server) count (c *gin.Context) {
 	res:= srv.keystorage.Count()
+	result := model.NewOvoResponse("done", "0", res)
+	c.JSON(http.StatusOK, result)
+}
+
+func (srv *Server) keys (c *gin.Context) {
+	keys := srv.keystorage.Keys()
+	res := &model.OvoKVKeys{Keys:keys}
 	result := model.NewOvoResponse("done", "0", res)
 	c.JSON(http.StatusOK, result)
 }
@@ -181,5 +192,11 @@ func (srv *Server) updateKey(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusBadRequest, model.NewOvoResponse("error", "10", nil))
 	}
+}
+
+func (srv *Server) getTopology (c *gin.Context) {
+	res:= model.NewOvoTopology(&srv.config.Topology)
+	result := model.NewOvoResponse("done", "0", res)
+	c.JSON(http.StatusOK, result)
 }
 	

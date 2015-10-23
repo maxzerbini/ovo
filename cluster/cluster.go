@@ -16,6 +16,7 @@ type OvoNode struct {
 	Name string
 	HashRange []int
 	Host string
+	ExtHost string
 	Port int
 	APIHost string
 	APIPort int
@@ -61,8 +62,13 @@ func (ct *ClusterTopology) GetNodeByName(name string)(node *ClusterTopologyNode,
 	}
 	return nil, 0
 }
-// Add or update a node in the topology ordering the topology by node's startdate
+// Add or update a node in the topology ordering the topology by node's startdate and rebuilding the hahscode
 func (ct *ClusterTopology) AddNode(node *ClusterTopologyNode){
+	ct.addNode(node)
+	ct.buildHashcode()
+}
+// Add or update a node in the topology ordering the topology by node's startdate
+func (ct *ClusterTopology) addNode(node *ClusterTopologyNode){ 
 	if nd, ind := ct.GetNodeByName(node.Node.Name); nd != nil {
 		ct.Nodes = append(ct.Nodes[:ind], ct.Nodes[ind+1:]...) //remove node if already present
 	}
@@ -79,7 +85,6 @@ func (ct *ClusterTopology) AddNode(node *ClusterTopologyNode){
 		}
 		ct.Nodes = append(ct.Nodes[:ind], append([]*ClusterTopologyNode{node},ct.Nodes[ind:]...)...)
 	}
-	ct.buildHashcode()
 }
 // Remove a node from the topology
 func (ct *ClusterTopology) RemoveNode(nodeName string){
@@ -93,8 +98,9 @@ func (ct *ClusterTopology) Merge(topology *ClusterTopology){
 	log.Println("Merging topologies ...")
 	for _, node := range topology.Nodes {
 		log.Printf("Evaluating node %s ...\r\n", node.Node.Name)
-		ct.AddNode(node)
+		ct.addNode(node)
 	}
+	ct.buildHashcode()
 }
 // Generate and assign the hashcode range to all nodes.
 func (ct *ClusterTopology) buildHashcode(){

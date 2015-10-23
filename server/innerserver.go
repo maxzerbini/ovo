@@ -17,13 +17,14 @@ import(
 type InnerServer struct {
 	keystorage storage.OvoStorage
 	incmdproc *processor.InCommandQueue
+	outcmdproc *processor.OutCommandQueue
 	config *ServerConf	
 	partitioner *processor.Partitioner
 }
 
 // Creata a new inner server.
 func NewInnerServer(conf *ServerConf, ks storage.OvoStorage, in *processor.InCommandQueue, out *processor.OutCommandQueue, partitioner *processor.Partitioner) *InnerServer{
-	return &InnerServer{keystorage:ks, incmdproc:in, config:conf, partitioner:partitioner}
+	return &InnerServer{keystorage:ks, incmdproc:in, config:conf, partitioner:partitioner, outcmdproc:out}
 }
 
 // Start listening commands.
@@ -47,7 +48,15 @@ func (srv *InnerServer) ExecuteCommand(rpccmd command.RpcCommand, reply *int) (e
 			err = errors.New("Runtime error.")
 		}
 	}()
-	srv.incmdproc.Enqueu(rpccmd.Command())
+	cmd := rpccmd.Command()
+	if rpccmd.OpCode == "move" {
+		cmd.OpCode = "put"
+		srv.incmdproc.Enqueu(cmd)
+		// replicate data on twins
+		srv.outcmdproc.Enqueu(cmd)
+	} else {
+		srv.incmdproc.Enqueu(cmd)
+	}
 	*reply = 0
 	return nil
 }
@@ -83,8 +92,15 @@ func (srv *InnerServer) UpdateTopology(topology *cluster.ClusterTopology, reply 
 	for _,node:= range topology.Nodes {
 		srv.config.Topology.AddNode(node)
 	}
-	*reply = srv.config.Topology
+	srv.config.Topology.Merge(topology)
+	srv.config.WriteTmp()
+	reply.Nodes = srv.config.Topology.Nodes
 	// start data partitioner
 	go srv.partitioner.MoveData()
+	return nil
+}
+
+func (srv *InnerServer) Ping(name *string, reply *int) (err error){
+	*reply = 0
 	return nil
 }

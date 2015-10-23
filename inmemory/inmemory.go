@@ -83,6 +83,7 @@ func (ks *InMemoryStorage) UpdateValueIfEqual(obj *storage.MetaDataUpdObj) (erro
 		}
 		obj.CreationDate = time.Now()
 		ks.collection.UpdateValueIfEqual(obj)
+		return nil
 	}
 	return errors.New("Object is null.")
 }
@@ -101,6 +102,7 @@ func (ks *InMemoryStorage) UpdateKeyAndValueIfEqual(obj *storage.MetaDataUpdObj)
 		}
 		obj.CreationDate = time.Now()
 		ks.collection.UpdateKeyAndValueIfEqual(obj)
+		return nil
 	}
 	return errors.New("Object is null.")
 }
@@ -119,6 +121,7 @@ func (ks *InMemoryStorage) UpdateKey(obj *storage.MetaDataUpdObj) (error){
 		}
 		obj.CreationDate = time.Now()
 		ks.collection.UpdateKey(obj)
+		return nil
 	}
 	return errors.New("Object is null.")
 }
@@ -135,6 +138,10 @@ func (ks *InMemoryStorage) Count() (int){
 
 func (ks *InMemoryStorage) List() ([]*storage.MetaDataObj){
 	return ks.collection.List()
+}
+
+func (ks *InMemoryStorage) Keys() ([]string){
+	return ks.collection.Keys()
 }
 
 func (ks *InMemoryStorage) ListExpired()(elements []*storage.MetaDataObj) {

@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/maxzerbini/ovo/storage"
+	"github.com/maxzerbini/ovo/cluster"
 )
 
 type Any interface { }
@@ -25,12 +26,28 @@ type OvoKVUpdateRequest struct {
 	NewKey string
 	Data []byte
 	NewData []byte
+	Hash int
 	NewHash int
 }
 
 type OvoKVResponse struct {
 	Key string
 	Data []byte
+}
+
+type OvoKVKeys struct {
+	Keys []string
+}
+
+type OvoTopologyNode struct {
+	Name string
+	HashRange []int
+	Host string
+	Port int
+}
+
+type OvoTopology struct {
+	Nodes []*OvoTopologyNode
 }
 
 func NewOvoResponse(status string, code string, data Any) *OvoResponse {
@@ -58,6 +75,19 @@ func NewMetaDataUpdObj(req *OvoKVUpdateRequest) *storage.MetaDataUpdObj {
 	obj.NewKey = req.NewKey
 	obj.Data = req.Data
 	obj.NewData = req.NewData
-	obj.Hash = req.NewHash
+	obj.Hash = req.Hash
+	obj.NewHash = req.NewHash
 	return obj
+}
+
+func NewOvoTopologyNode(node *cluster.ClusterTopologyNode) *OvoTopologyNode{
+	return &OvoTopologyNode{Name:node.Node.Name,HashRange:node.Node.HashRange,Host:node.Node.ExtHost,Port:node.Node.Port}
+}
+
+func NewOvoTopology(topology *cluster.ClusterTopology) *OvoTopology{
+	ret := &OvoTopology{Nodes:make([]*OvoTopologyNode,0)}
+	for _,node := range topology.Nodes {
+		ret.Nodes = append(ret.Nodes, NewOvoTopologyNode(node))
+	}
+	return ret
 }

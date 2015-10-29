@@ -10,6 +10,7 @@ import(
 	"github.com/maxzerbini/ovo/server/model"
 	"github.com/maxzerbini/ovo/command"
 	"github.com/maxzerbini/ovo/cluster"
+	"github.com/maxzerbini/ovo/util"
 	"net/http"
 	"strconv"
 	"github.com/gin-gonic/gin"
@@ -27,8 +28,8 @@ type Server struct {
 func NewServer(conf *ServerConf, ks storage.OvoStorage) *Server {
 	srv := &Server{keystorage:ks, config:conf}
 	srv.incmdproc = processor.NewCommandQueue(ks)
-	srv.outcmdproc = processor.NewOutCommandQueue(&conf.ServerNode, &conf.Topology, srv.incmdproc)
-	srv.partitioner = processor.NewPartitioner(ks, &conf.ServerNode, srv.outcmdproc)
+	srv.outcmdproc = processor.NewOutCommandQueue(conf.ServerNode, &conf.Topology, srv.incmdproc)
+	srv.partitioner = processor.NewPartitioner(ks, conf.ServerNode, srv.outcmdproc)
 	srv.innerServer = NewInnerServer(conf, ks, srv.incmdproc, srv.outcmdproc, srv.partitioner)
 	return srv
 }
@@ -61,26 +62,59 @@ func (srv *Server) Do() {
 }
 
 func (srv *Server) registerServer() {
-	topologies := make([]*cluster.ClusterTopology,0)
-	nodes := make([]*cluster.ClusterTopologyNode,0)
-	for _, node := range srv.config.Topology.Nodes {
-		if node.Node.Name != srv.config.ServerNode.Node.Name {
-			if topology, err := srv.outcmdproc.Caller.RegisterNode(&srv.config.ServerNode, &node.Node); err == nil && topology != nil{
-				log.Printf("Registration was successful on node %s\r\n", node.Node.Name)
-				topologies = append(topologies, topology)
-			} else {
-				log.Printf("Registration failed on node %s\r\n", node.Node.Name)
-				nodes = append(nodes, node)
+	// update topology
+	if len(srv.config.Topology.Nodes)>0 {
+		// connect first node
+		for _, node := range srv.config.Topology.Nodes {
+			if node.Node.Name != srv.config.ServerNode.Node.Name {
+				if topology,err := srv.outcmdproc.Caller.GetTopology(srv.config.ServerNode.Node.Name, node.Node); err == nil {
+					srv.config.Topology.Merge(topology)
+					break
+				}
 			}
 		}
-	}
-	// remove failed nodes
-	for _,node := range nodes {
-		srv.config.Topology.RemoveNode(node.Node.Name)
-	}
-	// merge 
-	for _, topology := range topologies {
-		srv.config.Topology.Merge(topology)
+		topologies := make([]*cluster.ClusterTopology,0)
+		failedNodes := make([]*cluster.ClusterTopologyNode,0)
+		for _, node := range srv.config.Topology.Nodes {
+			if node.Node.Name != srv.config.ServerNode.Node.Name {
+				if util.ContainsString(srv.config.ServerNode.Stepbrothers, node.Node.Name){
+					// register this node on a stepbrother node: the current node became the twin of the stepbrother node
+					if topology, err := srv.outcmdproc.Caller.RegisterTwin(srv.config.ServerNode, node.Node); err == nil && topology != nil{
+						log.Printf("Registration was successful on stepbrother node %s\r\n", node.Node.Name)
+						topologies = append(topologies, topology)
+					} else {
+						log.Printf("Registration failed on stepbrother node %s\r\n", node.Node.Name)
+						failedNodes = append(failedNodes, node)
+					}
+				} else if util.ContainsString(srv.config.ServerNode.Twins, node.Node.Name){
+					// register this node as a twin node: the node became the stepbrother of the current node
+					if topology, err := srv.outcmdproc.Caller.RegisterStepbrother(srv.config.ServerNode, node.Node); err == nil && topology != nil{
+						log.Printf("Registration was successful on twin node %s\r\n", node.Node.Name)
+						topologies = append(topologies, topology)
+					} else {
+						log.Printf("Registration failed on twin node %s\r\n", node.Node.Name)
+						failedNodes = append(failedNodes, node)
+					}
+				} else {
+					// register node on the cluster
+					if topology, err := srv.outcmdproc.Caller.RegisterNode(srv.config.ServerNode, node.Node); err == nil && topology != nil{
+						log.Printf("Registration was successful on node %s\r\n", node.Node.Name)
+						topologies = append(topologies, topology)
+					} else {
+						log.Printf("Registration failed on node %s\r\n", node.Node.Name)
+						failedNodes = append(failedNodes, node)
+					}
+				}
+			}
+		}
+		// remove failed nodes
+		for _,node := range failedNodes {
+			srv.config.Topology.RemoveNode(node.Node.Name)
+		}
+		// merge 
+		for _, topology := range topologies {
+			srv.config.Topology.Merge(topology)
+		}
 	}
 	srv.config.WriteTmp()
 }

@@ -17,6 +17,22 @@ func Protect(g func()) {
 
 // Check if a slice of int contains a value
 func Contains(s []int, e int) bool {
+    if s == nil {
+		return false
+	}
+	for _, a := range s {
+        if a == e {
+            return true
+        }
+    }
+    return false
+}
+
+// Check if a slice of int contains a value
+func ContainsString(s []string, e string) bool {
+	if s == nil {
+		return false
+	}
     for _, a := range s {
         if a == e {
             return true

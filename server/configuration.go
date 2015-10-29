@@ -12,19 +12,23 @@ import (
 const CONF_PATH string = "./conf/severconf.json"
 
 type ServerConf struct {
-	ServerNode cluster.ClusterTopologyNode
+	ServerNode *cluster.ClusterTopologyNode
 	Topology cluster.ClusterTopology
 	tmpPath string
 }
 
 func ( cnf *ServerConf) Init(tmpPath string) { 
 	cnf.ServerNode.StartDate = time.Now()
-	cnf.Topology.AddNode(&cnf.ServerNode)
+	cnf.ServerNode.Node.State = cluster.Active
+	if cnf.ServerNode.Twins == nil { cnf.ServerNode.Twins = make([]string,0)}
+	if cnf.ServerNode.Stepbrothers == nil { cnf.ServerNode.Stepbrothers = make([]string,0)}
+	cnf.ServerNode.UpdateDate = time.Now()
+	cluster.SetCurrentNode(cnf.ServerNode, &cnf.Topology)
 	cnf.tmpPath = tmpPath
 }
 
 func ( cnf *ServerConf) WriteTmp() { 
-	WriteConfiguration(cnf.tmpPath, *cnf)
+	WriteConfiguration(cnf.tmpPath, cnf)
 }
 
 func LoadConfiguration(path string) ServerConf {
@@ -38,7 +42,7 @@ func LoadConfiguration(path string) ServerConf {
 	return jsontype;
 }
 
-func WriteConfiguration(path string, conf ServerConf) {
+func WriteConfiguration(path string, conf *ServerConf) {
 	data, _ := json.Marshal(conf)
 	e := ioutil.WriteFile(path, data, 0x666)
     if e != nil {

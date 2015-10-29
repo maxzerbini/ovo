@@ -54,9 +54,9 @@ func (cq *OutCommandQueue) backend() {
 
 func (cq *OutCommandQueue) execute(obj *storage.MetaDataUpdObj, operation string){
 	for _, node := range cq.topology.GetTwins(cq.serverNode.Twins){
-		err := cq.Caller.ExecuteOperation(obj, &node.Node, operation)
+		err := cq.Caller.ExecuteOperation(obj, node.Node, operation)
 		if err != nil {
-			cq.enqueuError(newCommandError(obj, &node.Node, operation))
+			cq.enqueuError(newCommandError(obj, node.Node, operation))
 		}
 	}
 }
@@ -65,9 +65,9 @@ func (cq *OutCommandQueue) executeUpdateKey(obj *storage.MetaDataUpdObj, operati
 	if !util.Contains(cq.serverNode.Node.HashRange, obj.NewHash) {
 		// delete the data on the twins
 		for _, node := range cq.topology.GetTwins(cq.serverNode.Twins){
-			err := cq.Caller.ExecuteOperation(obj, &node.Node, "delete")
+			err := cq.Caller.ExecuteOperation(obj, node.Node, "delete")
 			if err != nil {
-				cq.enqueuError(newCommandError(obj, &node.Node, "delete"))
+				cq.enqueuError(newCommandError(obj, node.Node, "delete"))
 			}
 		}
 		// move the data because the new hashcode does not belong to this node
@@ -75,9 +75,9 @@ func (cq *OutCommandQueue) executeUpdateKey(obj *storage.MetaDataUpdObj, operati
 	} else {
 		// update data on the twins
 		for _, node := range cq.topology.GetTwins(cq.serverNode.Twins){
-			err := cq.Caller.ExecuteOperation(obj, &node.Node, operation)
+			err := cq.Caller.ExecuteOperation(obj, node.Node, operation)
 			if err != nil {
-				cq.enqueuError(newCommandError(obj, &node.Node, operation))
+				cq.enqueuError(newCommandError(obj, node.Node, operation))
 			}
 		}
 	}
@@ -85,9 +85,9 @@ func (cq *OutCommandQueue) executeUpdateKey(obj *storage.MetaDataUpdObj, operati
 
 func (cq *OutCommandQueue) move(obj *storage.MetaDataUpdObj){
 	if node := cq.topology.GetNodeByHash(obj.Hash); node != nil {
-		err := cq.Caller.ExecuteOperation(obj, &node.Node, "move")
+		err := cq.Caller.ExecuteOperation(obj, node.Node, "move")
 		if err != nil {
-			cq.enqueuError(newCommandError(obj, &node.Node, "move"))
+			cq.enqueuError(newCommandError(obj, node.Node, "move"))
 		} else {
 			cq.incomingQueue.Enqueu(&command.Command{OpCode:"delete",Obj:obj})
 		}

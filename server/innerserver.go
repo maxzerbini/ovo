@@ -71,11 +71,52 @@ func (srv *InnerServer) RegisterNode(node *cluster.ClusterTopologyNode, reply *c
 			err = errors.New("Runtime error.")
 		}
 	}()
+	log.Printf("Node %s ask registration\r\n", node.Node.Name)
 	srv.config.Topology.AddNode(node)
 	srv.config.WriteTmp()
 	reply.Nodes = srv.config.Topology.Nodes
 	// start data partitioner
 	go srv.partitioner.MoveData() 
+	return nil
+}
+
+// Register the new node as a twin.
+func (srv *InnerServer) RegisterTwin(node *cluster.ClusterTopologyNode, reply *cluster.ClusterTopology) (err error) {
+	defer func() {
+		// Executes normally even if there is a panic
+		if e:= recover(); e != nil {
+			log.Println("Run time panic: %v", e)
+			*reply = srv.config.Topology
+			err = errors.New("Runtime error.")
+		}
+	}()
+	log.Printf("Node %s ask registration as twin\r\n", node.Node.Name)
+	srv.config.Topology.AddTwin(node)
+	srv.config.WriteTmp()
+	reply.Nodes = srv.config.Topology.Nodes
+	// start data partitioner
+	go srv.partitioner.MoveData() 
+	go srv.updateAllClusterNodes() // update the state on the other nodes
+	return nil
+}
+
+// Register the new node as a stepbrother.
+func (srv *InnerServer) RegisterStepbrother(node *cluster.ClusterTopologyNode, reply *cluster.ClusterTopology) (err error) {
+	defer func() {
+		// Executes normally even if there is a panic
+		if e:= recover(); e != nil {
+			log.Println("Run time panic: %v", e)
+			*reply = srv.config.Topology
+			err = errors.New("Runtime error.")
+		}
+	}()
+	log.Printf("Node %s ask registration as stepbrother\r\n", node.Node.Name)
+	srv.config.Topology.AddStepbrother(node)
+	srv.config.WriteTmp()
+	reply.Nodes = srv.config.Topology.Nodes
+	// start data partitioner
+	go srv.partitioner.MoveData()
+	go srv.updateAllClusterNodes() // update the state on the other nodes
 	return nil
 }
 
@@ -89,9 +130,6 @@ func (srv *InnerServer) UpdateTopology(topology *cluster.ClusterTopology, reply 
 			err = errors.New("Runtime error.")
 		}
 	}()
-	for _,node:= range topology.Nodes {
-		srv.config.Topology.AddNode(node)
-	}
 	srv.config.Topology.Merge(topology)
 	srv.config.WriteTmp()
 	reply.Nodes = srv.config.Topology.Nodes
@@ -99,8 +137,32 @@ func (srv *InnerServer) UpdateTopology(topology *cluster.ClusterTopology, reply 
 	go srv.partitioner.MoveData()
 	return nil
 }
+// Update the node state without moving data.
+func (srv *InnerServer) UpdateNode(node *cluster.ClusterTopologyNode, reply *cluster.ClusterTopology) (err error) {
+	defer func() {
+		// Executes normally even if there is a panic
+		if e:= recover(); e != nil {
+			log.Println("Run time panic: %v", e)
+			*reply = srv.config.Topology
+			err = errors.New("Runtime error.")
+		}
+	}()
+	log.Printf("Node %s ask update\r\n", node.Node.Name)
+	srv.config.Topology.AddNode(node)
+	srv.config.WriteTmp()
+	reply.Nodes = srv.config.Topology.Nodes
+	return nil
+}
+// update all cluster node
+func (srv *InnerServer) updateAllClusterNodes(){
+	for _, nd := range srv.config.Topology.GetClusterNodes(){
+		log.Printf("Notifies the status change to the node %s ...\r\n", nd.Node.Name)
+		srv.outcmdproc.Caller.UpdateNode(srv.config.ServerNode, nd.Node)
+	}
+}
 
-func (srv *InnerServer) Ping(name *string, reply *int) (err error){
-	*reply = 0
+func (srv *InnerServer) GetTopology(name *string, reply *cluster.ClusterTopology) (err error){
+	log.Printf("Node %s asked topology\r\n", *name)
+	reply.Nodes = srv.config.Topology.GetNodes()
 	return nil
 }

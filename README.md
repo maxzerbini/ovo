@@ -21,7 +21,7 @@ $ go build -i github.com/maxzerbini/ovo
 ## Starting OVO
 ### Start a single node
 ```bash
-$ ovo -conf=./conf/serverconf.json
+$ ovo
 ```
 ### Start a three node cluster
 ```bash

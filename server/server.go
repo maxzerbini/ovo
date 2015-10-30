@@ -23,6 +23,7 @@ type Server struct {
 	config *ServerConf	
 	partitioner *processor.Partitioner
 	innerServer *InnerServer
+	nodeChecker *processor.Checker
 }
 
 func NewServer(conf *ServerConf, ks storage.OvoStorage) *Server {
@@ -31,6 +32,7 @@ func NewServer(conf *ServerConf, ks storage.OvoStorage) *Server {
 	srv.outcmdproc = processor.NewOutCommandQueue(conf.ServerNode, &conf.Topology, srv.incmdproc)
 	srv.partitioner = processor.NewPartitioner(ks, conf.ServerNode, srv.outcmdproc)
 	srv.innerServer = NewInnerServer(conf, ks, srv.incmdproc, srv.outcmdproc, srv.partitioner)
+	srv.nodeChecker = processor.NewChecker(&conf.Topology, srv.outcmdproc, srv.partitioner)
 	return srv
 }
 
@@ -57,6 +59,8 @@ func (srv *Server) Do() {
 	} else { gin.SetMode(gin.ReleaseMode) }
     // register this node in the cluster
 	srv.registerServer()
+	// start node checker
+	go srv.nodeChecker.Do()
 	// Listen and server on Host:Port
 	router.Run(srv.config.ServerNode.Node.Host+":"+strconv.Itoa(srv.config.ServerNode.Node.Port))
 }
@@ -77,7 +81,16 @@ func (srv *Server) registerServer() {
 		failedNodes := make([]*cluster.ClusterTopologyNode,0)
 		for _, node := range srv.config.Topology.Nodes {
 			if node.Node.Name != srv.config.ServerNode.Node.Name {
-				if util.ContainsString(srv.config.ServerNode.Stepbrothers, node.Node.Name){
+				if util.ContainsString(srv.config.ServerNode.Stepbrothers, node.Node.Name) && util.ContainsString(srv.config.ServerNode.Twins, node.Node.Name) {
+					// register this node as twin and stepbrother
+					if topology, err := srv.outcmdproc.Caller.RegisterTwinAndStepbrother(srv.config.ServerNode, node.Node); err == nil && topology != nil{
+						log.Printf("Registration was successful on twin and stepbrother node %s\r\n", node.Node.Name)
+						topologies = append(topologies, topology)
+					} else {
+						log.Printf("Registration failed on twin and stepbrother node %s\r\n", node.Node.Name)
+						failedNodes = append(failedNodes, node)
+					}
+				} else if util.ContainsString(srv.config.ServerNode.Stepbrothers, node.Node.Name){
 					// register this node on a stepbrother node: the current node became the twin of the stepbrother node
 					if topology, err := srv.outcmdproc.Caller.RegisterTwin(srv.config.ServerNode, node.Node); err == nil && topology != nil{
 						log.Printf("Registration was successful on stepbrother node %s\r\n", node.Node.Name)

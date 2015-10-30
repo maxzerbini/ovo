@@ -4,15 +4,14 @@ import (
 	"time"
 	"log"
 	"sync"
-)
-
-import(
 	"github.com/maxzerbini/ovo/util"
 )
 
-const MaxNodeNumber = 128
-const Active = "ACTIVE"
-const Unactive= "UNACTIVE"
+const (
+	MaxNodeNumber = 128
+	Active = "ACTIVE"
+	Inactive= "INACTIVE"
+)
 
 // Node configuration informations
 type OvoNode struct {
@@ -41,12 +40,15 @@ type ClusterTopology struct {
 
 var currentNode *ClusterTopologyNode
 var mux *sync.RWMutex = new(sync.RWMutex)
-
+// Set the current node
 func SetCurrentNode(node *ClusterTopologyNode, ct *ClusterTopology){
 	currentNode = node
 	ct.AddNode(currentNode)
 }
-
+// Get the current node
+func GetCurrentNode()*ClusterTopologyNode{
+	return currentNode
+}
 // Get the active twin nodes
 func (ct *ClusterTopology) GetTwins(names []string)(nodes []*ClusterTopologyNode){
 	nodes = make([]*ClusterTopologyNode,0)
@@ -85,6 +87,24 @@ func (ct *ClusterTopology) GetClusterNodes()(nodes []*ClusterTopologyNode){
 	}
 	return nodes
 }
+// Get the relative nodes
+func (ct *ClusterTopology) GetRelatives()(nodes []*ClusterTopologyNode){
+	nodemap := make(map[string]*ClusterTopologyNode,0)
+	nodes = make([]*ClusterTopologyNode,0)
+	mux.RLock()
+	defer mux.RUnlock()
+	for _,nd := range ct.Nodes {
+		if util.ContainsString(currentNode.Twins, nd.Node.Name) || util.ContainsString(currentNode.Stepbrothers, nd.Node.Name) {
+			if Active == nd.Node.State{
+				nodemap[nd.Node.Name] = nd
+			}
+		}
+	}
+	for _,nd := range nodemap {
+		nodes = append(nodes, nd)
+	}
+	return nodes
+}
 // Get the node that contains the hashcode
 func (ct *ClusterTopology) GetNodeByHash(hash int)(node *ClusterTopologyNode){
 	mux.RLock()
@@ -101,12 +121,7 @@ func (ct *ClusterTopology) GetNodeByHash(hash int)(node *ClusterTopologyNode){
 func (ct *ClusterTopology) GetNodeByName(name string)(node *ClusterTopologyNode, ind int){
 	mux.RLock()
 	defer mux.RUnlock()
-	for ind,nd := range ct.Nodes {
-		if nd.Node.Name == name {
-			return nd, ind
-		}
-	}
-	return nil, 0
+	return ct.getNodeByName(name)
 }
 // same func for internal use 
 func (ct *ClusterTopology) getNodeByName(name string)(node *ClusterTopologyNode, ind int){
@@ -129,10 +144,18 @@ func (ct *ClusterTopology) AddTwin(node *ClusterTopologyNode){
 	currentNode.Twins = append(currentNode.Twins, node.Node.Name)
 	currentNode.UpdateDate = time.Now()
 }
-// Add or update a twin in the topology ordering the topology by node's startdate and rebuilding the hahscode
+// Add or update a stepbrother in the topology ordering the topology by node's startdate and rebuilding the hahscode
 func (ct *ClusterTopology) AddStepbrother(node *ClusterTopologyNode){
 	ct.addNode(node)
 	ct.buildHashcode()
+	currentNode.Stepbrothers = append(currentNode.Stepbrothers, node.Node.Name)
+	currentNode.UpdateDate = time.Now()
+}
+// Add or update a twin and stepbrother in the topology ordering the topology by node's startdate and rebuilding the hahscode
+func (ct *ClusterTopology) AddTwinAndStepbrother(node *ClusterTopologyNode){
+	ct.addNode(node)
+	ct.buildHashcode()
+	currentNode.Twins = append(currentNode.Twins, node.Node.Name)
 	currentNode.Stepbrothers = append(currentNode.Stepbrothers, node.Node.Name)
 	currentNode.UpdateDate = time.Now()
 }
@@ -194,10 +217,16 @@ func (ct *ClusterTopology) addNode(node *ClusterTopologyNode){
 func (ct *ClusterTopology) buildHashcode(){
 	mux.RLock()
 	defer mux.RUnlock()
+	count := 0
+	for _, node := range ct.Nodes {
+		if Active == node.Node.State {
+			count++
+		}
+	}
 	log.Println("Partitioning hashcode...")
 	var r int = MaxNodeNumber
-	if len(ct.Nodes) > 0 {
-		r = MaxNodeNumber / len(ct.Nodes)
+	if count > 0 {
+		r = MaxNodeNumber / count
 	}
 	//log.Printf(" r = %d \r\n",r)
 	var hashrange []int = make([]int, MaxNodeNumber)
@@ -205,12 +234,14 @@ func (ct *ClusterTopology) buildHashcode(){
 		hashrange[i] = i
 	}
 	for ind, node := range ct.Nodes {
-		if ind < (len(ct.Nodes) -1) {
-			log.Printf(" node = %s : start = %d - end = %d\r\n", node.Node.Name, ind*r, (ind*(r)+r)-1)
-			node.Node.HashRange = hashrange[ind*r:(ind*(r)+r)-1]
-		} else {
-			log.Printf(" node = %s : start = %d - end = %d\r\n", node.Node.Name, ind*r, len(hashrange)-1)
-			node.Node.HashRange = hashrange[ind*r:]
+		if Active == node.Node.State {
+			if ind < (len(ct.Nodes) -1) {
+				log.Printf(" node = %s : start = %d - end = %d\r\n", node.Node.Name, ind*r, (ind*(r)+r)-1)
+				node.Node.HashRange = hashrange[ind*r:(ind*(r)+r)-1]
+			} else {
+				log.Printf(" node = %s : start = %d - end = %d\r\n", node.Node.Name, ind*r, len(hashrange)-1)
+				node.Node.HashRange = hashrange[ind*r:]
+			}
 		}
 	}
 }

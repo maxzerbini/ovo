@@ -111,6 +111,28 @@ func (nc *NodeCaller) RegisterStepbrother(node *cluster.ClusterTopologyNode, des
 	}
 	return topology, err
 }
+// Ask the destination to register the node as a twin and a stepbrother
+func (nc *NodeCaller) RegisterTwinAndStepbrother(node *cluster.ClusterTopologyNode, destination *cluster.OvoNode) ( *cluster.ClusterTopology, error) {
+	defer func() {
+		// executes normally even if there is a panic
+		if err2 := recover(); err2 != nil {
+			//remove the client
+			delete(nc.clients, destination.Name)
+		}
+	}()
+	var client *rpc.Client
+	var ok bool
+	if client, ok = nc.clients[destination.Name]; !ok {
+		client = nc.createClient(destination)
+	}
+	var topology = new (cluster.ClusterTopology)
+	var err = client.Call("InnerServer.RegisterTwinAndStepbrother", node, topology)
+	if err != nil {
+		topology = nil
+		log.Println("InnerServer.RegisterTwinAndStepbrother error: ", err)
+	}
+	return topology, err
+}
 // Ask the destination to give the topology
 func (nc *NodeCaller) GetTopology(currentNode string, destination *cluster.OvoNode) ( *cluster.ClusterTopology, error) {
 	defer func() {
@@ -177,6 +199,32 @@ func (nc *NodeCaller) UpdateNode(node *cluster.ClusterTopologyNode, destination 
 	}
 	return topology, err
 }
+// Ask the destination to give the topology
+func (nc *NodeCaller) Ping(currentNode string, destination *cluster.OvoNode) error {
+	defer func() {
+		// executes normally even if there is a panic
+		if err2 := recover(); err2 != nil {
+			//remove the client
+			delete(nc.clients, destination.Name)
+		}
+	}()
+	var client *rpc.Client
+	var ok bool
+	if client, ok = nc.clients[destination.Name]; !ok {
+		client = nc.createClient(destination)
+	}
+	var reply int = 0
+	var err = client.Call("InnerServer.Ping", currentNode, &reply)
+	if err != nil {
+		log.Println("InnerServer.Ping error: ", err)
+	}
+	return err
+}
+// Remove a client by name
+func (nc *NodeCaller) RemoveClient(name string){
+	delete (nc.clients, name)
+}
+// Create the client.
 func (nc *NodeCaller) createClient(destination *cluster.OvoNode) *rpc.Client{
 	defer func() {
 		// Println executes normally even if there is a panic
@@ -185,6 +233,7 @@ func (nc *NodeCaller) createClient(destination *cluster.OvoNode) *rpc.Client{
 		}
 	}()
 	client, err := rpc.DialHTTP("tcp", destination.APIHost + ":"+strconv.Itoa(destination.APIPort))
+	log.Printf("Create client for %s\r\n", destination.Name)
 	if err != nil {
 		log.Printf("dialing: %v \r\n", err)
 		return nil

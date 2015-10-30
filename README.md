@@ -1,8 +1,8 @@
 # ovo
 
-## OVO is an In-Memory Key/Value Storage
+OVO is an In-Memory Key/Value Storage
 
-### Main features
+## Main features
 - Multi-Master Cluster architecture
 - The nodes can be added and removed dynamically
 - Data's replications are done on many nodes (Twins) giving data's high availability

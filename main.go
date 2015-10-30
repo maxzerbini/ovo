@@ -7,6 +7,7 @@ import(
 	"github.com/maxzerbini/ovo/server"
 	"log"
 	"runtime"
+	"runtime/debug"
 	"flag"
 )
 
@@ -18,6 +19,7 @@ var configPathTemp string = "./conf/serverconf.json.temp"
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	debug.SetGCPercent(700)
 	flag.StringVar(&configPath, "conf", "./conf/serverconf.json", "path of the file severconf.json")
 }
 

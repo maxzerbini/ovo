@@ -1,8 +1,8 @@
 # ovo
 
-OVO is an In-Memory Key/Value Storage
+## OVO is an In-Memory Key/Value Storage
 
-Main features
+### Main features
 - Multi-Master Cluster architecture
 - The nodes can be added and removed dynamically
 - Data's replications are done on many nodes (Twins) giving data's high availability
@@ -11,3 +11,15 @@ Main features
 - OVO supports data sharding on many cluster nodes using smart clients
 
 The project is under development.
+
+## Building OVO
+
+```bash
+$ go build -i github.com/maxzerbini/ovo
+```
+
+## Starting OVO
+```bash
+$ ovo -conf=./conf/serverconf.json
+```
+

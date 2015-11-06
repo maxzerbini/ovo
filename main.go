@@ -11,11 +11,17 @@ import(
 	"flag"
 )
 
-var ks storage.OvoStorage
-var conf server.ServerConf
-var srv *server.Server
-var configPath string = "./conf/serverconf.json"
-var configPathTemp string = "./conf/serverconf.json.temp"
+const (
+	Version = "1.0"
+)
+
+var (
+	ks storage.OvoStorage
+	conf server.ServerConf
+	srv *server.Server
+	configPath string = "./conf/serverconf.json"
+	configPathTemp string = "./conf/serverconf.json.temp"
+)
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -34,8 +40,8 @@ func main(){
 // Start the server node
 func start() {
 	conf = server.LoadConfiguration(configPath)
+	log.Printf("Start server node OVO Engine v.%S .\r\n",Version)
 	conf.Init(configPathTemp)
-	log.Println("Start server node.")
 	ks = inmemory.NewInMemoryStorage()
 	srv = server.NewServer(&conf, ks)
 	srv.Do()

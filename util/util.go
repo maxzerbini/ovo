@@ -40,3 +40,13 @@ func ContainsString(s []string, e string) bool {
     }
     return false
 }
+// Remove all occurences of the element in the slice
+func RemoveElement(s []string, element string) []string {
+	list := make([]string,0)
+	for _,e := range s {
+		if e != element {
+			list = append(list, e)
+		}
+	}
+	return list;
+}

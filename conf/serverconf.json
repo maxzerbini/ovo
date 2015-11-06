@@ -1,1 +1,1 @@
-{"ServerNode":{"Node":{"Name":"mizard","HashRange":[],"Host":"0.0.0.0","ExtHost":"localhost","Port":5050,"APIHost":"localhost","APIPort":5052,"Debug":true},"StartDate":"2015-10-08T08:50:08.0002426+02:00","Twins":[],"Stepbrothers":[]},"Topology":{}}
+{"ServerNode":{"Node":{"Name":"mizard","HashRange":[],"Host":"0.0.0.0","ExtHost":"localhost","Port":5050,"APIHost":"localhost","APIPort":5052},"StartDate":"2015-10-08T08:50:08.0002426+02:00","Twins":[],"Stepbrothers":[]},"Topology":{},"Debug":true}

@@ -7,12 +7,14 @@ import(
 	"log"
 	"net/rpc"
 	"strconv"
+	"sync"
 )
 
 type NodeCaller struct {
 	Source string
 	Name string
 	clients map[string]*rpc.Client
+	mux *sync.RWMutex 
 }
 
 // Create the node caller
@@ -20,7 +22,33 @@ func NewNodeCaller(source string) *NodeCaller {
 	nc := new(NodeCaller)
 	nc.Source = source
 	nc.clients = make(map[string]*rpc.Client)
+	nc.mux = new (sync.RWMutex)
 	return nc
+}
+// Add a client if it is not already in the map
+func (nc *NodeCaller) addCaller(name string, client *rpc.Client) {
+	nc.mux.Lock()
+	defer nc.mux.Unlock()
+	if _,ok:=nc.clients[name]; !ok{
+		log.Printf("Create client for %s\r\n", name)
+		nc.clients[name] = client
+	} 
+}
+// Delete a client
+func (nc *NodeCaller) deleteCaller(name string) {
+	nc.mux.Lock()
+	defer nc.mux.Unlock()
+	delete(nc.clients, name) 
+}
+// Get the caller
+func (nc *NodeCaller) getCaller(name string) (*rpc.Client, bool) {
+	nc.mux.RLock()
+	defer nc.mux.RUnlock()
+	if val, ok := nc.clients[name]; ok {
+		return val, true
+	} else {
+		return nil, false
+	}
 }
 
 // Execute remote operation on destination server
@@ -29,12 +57,12 @@ func (nc *NodeCaller) ExecuteOperation(obj *storage.MetaDataUpdObj, destination 
 		// executes normally even if there is a panic
 		if err2 := recover(); err2 != nil {
 			//remove the client
-			delete(nc.clients, destination.Name)
+			nc.deleteCaller(destination.Name)
 		}
 	}()
 	var client *rpc.Client
 	var ok bool
-	if client, ok = nc.clients[destination.Name]; !ok {
+	if client, ok = nc.getCaller(destination.Name); !ok {
 		client = nc.createClient(destination)
 	}
 	rpccmd := &command.RpcCommand{Source:"test", OpCode:operation, Obj:obj}
@@ -51,12 +79,12 @@ func (nc *NodeCaller) RegisterNode(node *cluster.ClusterTopologyNode, destinatio
 		// executes normally even if there is a panic
 		if err2 := recover(); err2 != nil {
 			//remove the client
-			delete(nc.clients, destination.Name)
+			nc.deleteCaller(destination.Name)
 		}
 	}()
 	var client *rpc.Client
 	var ok bool
-	if client, ok = nc.clients[destination.Name]; !ok {
+	if client, ok = nc.getCaller(destination.Name); !ok {
 		client = nc.createClient(destination)
 	}
 	var topology = new (cluster.ClusterTopology)
@@ -73,12 +101,12 @@ func (nc *NodeCaller) RegisterTwin(node *cluster.ClusterTopologyNode, destinatio
 		// executes normally even if there is a panic
 		if err2 := recover(); err2 != nil {
 			//remove the client
-			delete(nc.clients, destination.Name)
+			nc.deleteCaller(destination.Name)
 		}
 	}()
 	var client *rpc.Client
 	var ok bool
-	if client, ok = nc.clients[destination.Name]; !ok {
+	if client, ok = nc.getCaller(destination.Name); !ok {
 		client = nc.createClient(destination)
 	}
 	var topology = new (cluster.ClusterTopology)
@@ -95,12 +123,12 @@ func (nc *NodeCaller) RegisterStepbrother(node *cluster.ClusterTopologyNode, des
 		// executes normally even if there is a panic
 		if err2 := recover(); err2 != nil {
 			//remove the client
-			delete(nc.clients, destination.Name)
+			nc.deleteCaller(destination.Name)
 		}
 	}()
 	var client *rpc.Client
 	var ok bool
-	if client, ok = nc.clients[destination.Name]; !ok {
+	if client, ok = nc.getCaller(destination.Name); !ok {
 		client = nc.createClient(destination)
 	}
 	var topology = new (cluster.ClusterTopology)
@@ -117,12 +145,12 @@ func (nc *NodeCaller) RegisterTwinAndStepbrother(node *cluster.ClusterTopologyNo
 		// executes normally even if there is a panic
 		if err2 := recover(); err2 != nil {
 			//remove the client
-			delete(nc.clients, destination.Name)
+			nc.deleteCaller(destination.Name)
 		}
 	}()
 	var client *rpc.Client
 	var ok bool
-	if client, ok = nc.clients[destination.Name]; !ok {
+	if client, ok = nc.getCaller(destination.Name); !ok {
 		client = nc.createClient(destination)
 	}
 	var topology = new (cluster.ClusterTopology)
@@ -139,12 +167,12 @@ func (nc *NodeCaller) GetTopology(currentNode string, destination *cluster.OvoNo
 		// executes normally even if there is a panic
 		if err2 := recover(); err2 != nil {
 			//remove the client
-			delete(nc.clients, destination.Name)
+			nc.deleteCaller(destination.Name)
 		}
 	}()
 	var client *rpc.Client
 	var ok bool
-	if client, ok = nc.clients[destination.Name]; !ok {
+	if client, ok = nc.getCaller(destination.Name); !ok {
 		client = nc.createClient(destination)
 	}
 	var topology = new (cluster.ClusterTopology)
@@ -161,12 +189,12 @@ func (nc *NodeCaller) UpdateTopology(topology *cluster.ClusterTopology, destinat
 		// executes normally even if there is a panic
 		if err2 := recover(); err2 != nil {
 			//remove the client
-			delete(nc.clients, destination.Name)
+			nc.deleteCaller(destination.Name)
 		}
 	}()
 	var client *rpc.Client
 	var ok bool
-	if client, ok = nc.clients[destination.Name]; !ok {
+	if client, ok = nc.getCaller(destination.Name); !ok {
 		client = nc.createClient(destination)
 	}
 	var mergedtopology = new (cluster.ClusterTopology)
@@ -183,12 +211,12 @@ func (nc *NodeCaller) UpdateNode(node *cluster.ClusterTopologyNode, destination 
 		// executes normally even if there is a panic
 		if err2 := recover(); err2 != nil {
 			//remove the client
-			delete(nc.clients, destination.Name)
+			nc.deleteCaller(destination.Name)
 		}
 	}()
 	var client *rpc.Client
 	var ok bool
-	if client, ok = nc.clients[destination.Name]; !ok {
+	if client, ok = nc.getCaller(destination.Name); !ok {
 		client = nc.createClient(destination)
 	}
 	var topology = new (cluster.ClusterTopology)
@@ -205,12 +233,12 @@ func (nc *NodeCaller) Ping(currentNode string, destination *cluster.OvoNode) err
 		// executes normally even if there is a panic
 		if err2 := recover(); err2 != nil {
 			//remove the client
-			delete(nc.clients, destination.Name)
+			nc.deleteCaller(destination.Name)
 		}
 	}()
 	var client *rpc.Client
 	var ok bool
-	if client, ok = nc.clients[destination.Name]; !ok {
+	if client, ok = nc.getCaller(destination.Name); !ok {
 		client = nc.createClient(destination)
 	}
 	var reply int = 0
@@ -233,12 +261,11 @@ func (nc *NodeCaller) createClient(destination *cluster.OvoNode) *rpc.Client{
 		}
 	}()
 	client, err := rpc.DialHTTP("tcp", destination.APIHost + ":"+strconv.Itoa(destination.APIPort))
-	log.Printf("Create client for %s\r\n", destination.Name)
 	if err != nil {
 		log.Printf("dialing: %v \r\n", err)
 		return nil
 	} else {
-		nc.clients[destination.Name] = client
+		nc.addCaller(destination.Name, client)
 		return client
 	}
 }

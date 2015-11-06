@@ -23,7 +23,7 @@ type Server struct {
 	config *ServerConf	
 	partitioner *processor.Partitioner
 	innerServer *InnerServer
-	nodeChecker *processor.Checker
+	nodeChecker *Checker
 }
 
 func NewServer(conf *ServerConf, ks storage.OvoStorage) *Server {
@@ -32,11 +32,12 @@ func NewServer(conf *ServerConf, ks storage.OvoStorage) *Server {
 	srv.outcmdproc = processor.NewOutCommandQueue(conf.ServerNode, &conf.Topology, srv.incmdproc)
 	srv.partitioner = processor.NewPartitioner(ks, conf.ServerNode, srv.outcmdproc)
 	srv.innerServer = NewInnerServer(conf, ks, srv.incmdproc, srv.outcmdproc, srv.partitioner)
-	srv.nodeChecker = processor.NewChecker(&conf.Topology, srv.outcmdproc, srv.partitioner)
+	srv.nodeChecker = NewChecker(conf, srv.outcmdproc, srv.partitioner)
 	return srv
 }
 
 func (srv *Server) Do() {
+	log.Printf("Staring node %s ...\r\n", srv.config.ServerNode.Node.Name)
 	go srv.innerServer.Do()
 	// Creates a router without any middleware by default
     router := gin.New()
@@ -54,13 +55,14 @@ func (srv *Server) Do() {
 	router.POST("/ovo/keystorage/:key/updatekeyvalueifequal", srv.updateKeyAndValueIfEqual )
 	router.POST("/ovo/keystorage/:key/updatekey", srv.updateKey )
 	router.GET("/ovo/cluster", srv.getTopology )
-	if srv.config.ServerNode.Node.Debug {
+	if srv.config.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else { gin.SetMode(gin.ReleaseMode) }
     // register this node in the cluster
 	srv.registerServer()
 	// start node checker
 	go srv.nodeChecker.Do()
+	log.Printf("Node %s started\r\n", srv.config.ServerNode.Node.Name)
 	// Listen and server on Host:Port
 	router.Run(srv.config.ServerNode.Node.Host+":"+strconv.Itoa(srv.config.ServerNode.Node.Port))
 }

@@ -22,7 +22,6 @@ type OvoNode struct {
 	Port int
 	APIHost string
 	APIPort int
-	Debug bool
 	State string
 }
 // The cluster node struct
@@ -70,6 +69,18 @@ func (ct *ClusterTopology) GetNodes()(nodes []*ClusterTopologyNode){
 	defer mux.RUnlock()
 	for _,nd := range ct.Nodes {
 		if Active == nd.Node.State {
+			nodes = append(nodes, nd)
+		}
+	}
+	return nodes
+}
+// Get the all inactive nodes
+func (ct *ClusterTopology) GetInactiveNodes()(nodes []*ClusterTopologyNode){
+	nodes = make([]*ClusterTopologyNode,0)
+	mux.RLock()
+	defer mux.RUnlock()
+	for _,nd := range ct.Nodes {
+		if Active != nd.Node.State {
 			nodes = append(nodes, nd)
 		}
 	}
@@ -162,6 +173,12 @@ func (ct *ClusterTopology) AddTwinAndStepbrother(node *ClusterTopologyNode){
 // Remove a node from the topology
 func (ct *ClusterTopology) RemoveNode(nodeName string){
 	if res := ct.removeNode(nodeName); res {
+		log.Printf("Node %s REMOVED.\r\n", nodeName)
+		//remove twins & stepbrother
+		for _,nd := range ct.GetNodes(){
+			nd.Stepbrothers = util.RemoveElement(nd.Stepbrothers, nodeName)
+			nd.Twins = util.RemoveElement(nd.Twins, nodeName)
+		}
 		ct.buildHashcode()
 	}
 }

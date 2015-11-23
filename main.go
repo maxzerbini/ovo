@@ -40,7 +40,7 @@ func main(){
 // Start the server node
 func start() {
 	conf = server.LoadConfiguration(configPath)
-	log.Printf("Start server node OVO Engine v.%S .\r\n",Version)
+	log.Printf("Start server node OVO Engine v.%s .\r\n",Version)
 	conf.Init(configPathTemp)
 	ks = inmemory.NewInMemoryStorage()
 	srv = server.NewServer(&conf, ks)

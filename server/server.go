@@ -42,7 +42,9 @@ func (srv *Server) Do() {
 	// Creates a router without any middleware by default
     router := gin.New()
     // Global middleware
-    router.Use(gin.Logger())
+	if srv.config.Debug {
+    	router.Use(gin.Logger())
+	}
     router.Use(gin.Recovery())
 	router.GET("/ovo/keystorage", srv.count)
 	router.GET("/ovo/keys", srv.keys)
@@ -55,6 +57,7 @@ func (srv *Server) Do() {
 	router.POST("/ovo/keystorage/:key/updatekeyvalueifequal", srv.updateKeyAndValueIfEqual )
 	router.POST("/ovo/keystorage/:key/updatekey", srv.updateKey )
 	router.GET("/ovo/cluster", srv.getTopology )
+	router.GET("/ovo/cluster/me", srv.getCurrentNode )
 	if srv.config.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else { gin.SetMode(gin.ReleaseMode) }
@@ -245,6 +248,12 @@ func (srv *Server) updateKey(c *gin.Context) {
 
 func (srv *Server) getTopology (c *gin.Context) {
 	res:= model.NewOvoTopology(&srv.config.Topology)
+	result := model.NewOvoResponse("done", "0", res)
+	c.JSON(http.StatusOK, result)
+}
+
+func (srv *Server) getCurrentNode (c *gin.Context) {
+	res:= model.NewOvoTopologyNode(srv.config.ServerNode)
 	result := model.NewOvoResponse("done", "0", res)
 	c.JSON(http.StatusOK, result)
 }

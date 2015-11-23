@@ -242,14 +242,38 @@ func (ct *ClusterTopology) buildHashcode(){
 	}
 	log.Println("Partitioning hashcode...")
 	var r int = MaxNodeNumber
+	var q int = 0
 	if count > 0 {
 		r = MaxNodeNumber / count
+		q = MaxNodeNumber % count
+		log.Printf("Range len = %d - Remnant = %d\r\n",r,q)
 	}
 	//log.Printf(" r = %d \r\n",r)
 	var hashrange []int = make([]int, MaxNodeNumber)
 	for i :=0; i<MaxNodeNumber; i++ {
 		hashrange[i] = i
 	}
+	var start int = 0
+	var end int = r - 1
+	for _, node := range ct.Nodes {
+		if Active == node.Node.State {
+			
+			if end < (len(hashrange) - 1) {
+				if q > 0 { 
+					end++
+					q--
+				}
+				node.Node.HashRange = hashrange[start:end+1]
+				log.Printf(" node = %s : start = %d - end = %d\r\n", node.Node.Name, start, end)
+				start = end + 1
+				end += r
+			} else {
+				node.Node.HashRange = hashrange[start:]
+				log.Printf(" node = %s : start = %d - end = %d\r\n", node.Node.Name, start, end)
+			}
+		}
+	}
+	/* *
 	for ind, node := range ct.Nodes {
 		if Active == node.Node.State {
 			if ind < (len(ct.Nodes) -1) {
@@ -261,5 +285,6 @@ func (ct *ClusterTopology) buildHashcode(){
 			}
 		}
 	}
+	* */
 }
 

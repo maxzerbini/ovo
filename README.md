@@ -32,21 +32,21 @@ $ ovo -conf=./conf/serverconf2.json
 $ ovo -conf=./conf/serverconf3.json
 ```
 
-## Restful API
+## RESTful API
 Clients can connect OVO using RESTful API. 
 
 The available API set includes these endpoints:
-- GET /ovo/keystorage gives the count of all the stored keys
-- GET /ovo/keys gives the list of all the stored keys
-- GET /ovo/keystorage/:key retrieves the object corresponding to key 
-- POST /ovo/keystorage puts the body object in the storage
-- PUT /ovo/keystorage same as POST
-- DELETE /ovo/keystorage/:key removes the object from the storage
-- GET /ovo/keystorage/:key/getandremove gets the object and removes it from the storage
-- POST /ovo/keystorage/:key/updatevalueifequal updates the object with a new value if the input old value is equal to the stored object value 
-- POST /ovo/keystorage/:key/updatekeyvalueifequal updates the object end the key with a new values if the input old value is equal to the stored object value
-- POST /ovo/keystorage/:key/updatekey changes the key of an object 
-- GET /ovo/cluster gets the cluster topology
-- GET /ovo/cluster/me gets the node details
+- _GET /ovo/keystorage_ gives the count of all the stored keys
+- _GET /ovo/keys gives_ the list of all the stored keys
+- _GET /ovo/keystorage/:key_ retrieves the object corresponding to key 
+- _POST /ovo/keystorage_ puts the body object in the storage
+- _PUT /ovo/keystorage_ same as POST
+- _DELETE /ovo/keystorage/:key_ removes the object from the storage
+- _GET /ovo/keystorage/:key/getandremove_ gets the object and removes it from the storage
+- _POST /ovo/keystorage/:key/updatevalueifequal_ updates the object with a new value if the input old value is equal to the stored object value 
+- _POST /ovo/keystorage/:key/updatekeyvalueifequal_ updates the object end the key with a new values if the input old value is equal to the stored object value
+- _POST /ovo/keystorage/:key/updatekey_ changes the key of an object 
+- _GET /ovo/cluster_ gets the cluster topology
+- _GET /ovo/cluster/me_ gets the node details
 
 The Go OVO Client can connect a cluster of OVO nodes. The Go client source code can be found here https://github.com/maxzerbini/ovoclient .

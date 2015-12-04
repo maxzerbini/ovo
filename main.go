@@ -25,7 +25,7 @@ var (
 
 func init() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	debug.SetGCPercent(700)
+	debug.SetGCPercent(300)
 	flag.StringVar(&configPath, "conf", "./conf/serverconf.json", "path of the file severconf.json")
 }
 

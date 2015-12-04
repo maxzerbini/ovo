@@ -45,6 +45,7 @@ type OvoTopologyNode struct {
 	Host string
 	Port int
 	State string
+	Twins []string
 }
 
 type OvoTopology struct {
@@ -82,7 +83,7 @@ func NewMetaDataUpdObj(req *OvoKVUpdateRequest) *storage.MetaDataUpdObj {
 }
 
 func NewOvoTopologyNode(node *cluster.ClusterTopologyNode) *OvoTopologyNode{
-	return &OvoTopologyNode{Name:node.Node.Name,HashRange:node.Node.HashRange,Host:node.Node.ExtHost,Port:node.Node.Port,State:node.Node.State}
+	return &OvoTopologyNode{Name:node.Node.Name,HashRange:node.Node.HashRange,Host:node.Node.ExtHost,Port:node.Node.Port,State:node.Node.State,Twins:node.Twins}
 }
 
 func NewOvoTopology(topology *cluster.ClusterTopology) *OvoTopology{

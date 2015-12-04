@@ -3,6 +3,9 @@
 OVO is an In-Memory Key/Value Storage.
 
 ## Main features
+
+OVO is a distributed in-memory cache that supports data sharding on multiple instances and data replication.
+
 - Multi-Master Cluster architecture
 - The nodes can be added and removed dynamically
 - Data's replications are done on many nodes (Twins) giving data's high availability

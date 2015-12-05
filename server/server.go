@@ -54,8 +54,11 @@ func (srv *Server) Do() {
 	router.DELETE("/ovo/keystorage/:key", srv.delete)
 	router.GET("/ovo/keystorage/:key/getandremove", srv.getAndRemove)
 	router.POST("/ovo/keystorage/:key/updatevalueifequal", srv.updateValueIfEqual)
+	router.PUT("/ovo/keystorage/:key/updatevalueifequal", srv.updateValueIfEqual)
 	router.POST("/ovo/keystorage/:key/updatekeyvalueifequal", srv.updateKeyAndValueIfEqual)
+	router.PUT("/ovo/keystorage/:key/updatekeyvalueifequal", srv.updateKeyAndValueIfEqual)
 	router.POST("/ovo/keystorage/:key/updatekey", srv.updateKey)
+	router.PUT("/ovo/keystorage/:key/updatekey", srv.updateKey)
 	router.GET("/ovo/cluster", srv.getTopology)
 	router.GET("/ovo/cluster/me", srv.getCurrentNode)
 	if srv.config.Debug {

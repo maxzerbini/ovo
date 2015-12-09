@@ -25,6 +25,14 @@ type MetaDataUpdObj struct {
 	NewHash int
 }
 
+type MetaDataCounter struct {
+	Key string
+	Value int64
+	CreationDate time.Time
+	TTL int
+	Hash int
+}
+
 func NewMetaDataObj(key string, data []byte, collection string, ttl int, hash int) MetaDataObj {
 	return MetaDataObj{Key:key, Data:data, Collection:collection, CreationDate:time.Now(), TTL:ttl, Hash:hash}
 }
@@ -41,6 +49,11 @@ func (obj MetaDataObj) IsExpired() bool {
 func (obj *MetaDataUpdObj) MetaDataObj() (*MetaDataObj) {
 	item := &MetaDataObj {Key:obj.Key, Data:obj.Data, Collection:obj.Collection, TTL:obj.TTL, Hash: obj.Hash}
 	return item
+}
+
+func (obj MetaDataCounter) IsExpired() bool {
+	if obj.TTL == 0 { return false }
+	return time.Now().After(obj.CreationDate.Add(time.Duration(obj.TTL)*time.Second))
 }
 
 type OvoStorage interface {

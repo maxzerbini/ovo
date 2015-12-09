@@ -193,7 +193,7 @@ func (srv *Server) getAndRemove(c *gin.Context) {
 		result := model.NewOvoResponse("done", "0", obj)
 		c.JSON(http.StatusOK, result)
 	} else {
-		c.JSON(http.StatusForbidden, model.NewOvoResponse("error", "102", nil))
+		c.JSON(http.StatusNotFound, model.NewOvoResponse("error", "101", nil))
 	}
 }
 

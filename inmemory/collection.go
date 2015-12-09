@@ -10,6 +10,7 @@ const collection_buffer_size = 100
 // Collection (Map) of MetaDataObj. This collection is thread-safe.
 type InMemoryCollection struct {
 	storage map[string]*storage.MetaDataObj
+	counters map[string]*storage.MetaDataCounter
 	commands chan func()
 }
 
@@ -24,6 +25,7 @@ func (coll *InMemoryCollection) execCmd() {
 func NewCollection()(*InMemoryCollection){
 	coll := new(InMemoryCollection)
 	coll.storage = make(map[string]*storage.MetaDataObj,10)	
+	coll.counters = make(map[string]*storage.MetaDataCounter, 10)
 	coll.commands = make (chan func(), collection_buffer_size)
 	go coll.execCmd()
 	return coll
@@ -195,4 +197,26 @@ func (coll *InMemoryCollection) ListExpired() ([]*storage.MetaDataObj){
 	}
 	<- retChan //wait for result
 	return list
+}
+
+func (coll *InMemoryCollection) Increment(c *storage.MetaDataCounter) *storage.MetaDataCounter {
+	retChan := make(chan *storage.MetaDataCounter)
+	defer close(retChan)
+	coll.commands <- func() { 
+		if ret, ok := coll.counters[c.Key]; ok {
+			if ret.IsExpired() {
+				ret.CreationDate = time.Now()
+				ret.Value = c.Value
+			} else { 
+				ret.Value += c.Value
+			}
+			retChan <- ret
+		} else {
+			c.CreationDate = time.Now()
+			coll.counters[c.Key] = c
+			retChan <- c
+		}
+	}
+	var result = <- retChan
+	return result
 }

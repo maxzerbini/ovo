@@ -147,3 +147,7 @@ func (ks *InMemoryStorage) Keys() ([]string){
 func (ks *InMemoryStorage) ListExpired()(elements []*storage.MetaDataObj) {
 	return ks.collection.ListExpired()
 }
+
+func (ks *InMemoryStorage) Increment(c *storage.MetaDataCounter) *storage.MetaDataCounter {
+	return ks.collection.Increment(c)
+}

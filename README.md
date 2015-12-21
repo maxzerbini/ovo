@@ -11,6 +11,7 @@ OVO has these functions:
 - Data's replications are done on many nodes (Twins) giving data's high availability
 - Keys are strings but every kind of data values can be stored
 - Auto-expiration if the TTL of the object is setted
+- Atomic counters
 - OVO supports data sharding on many cluster nodes using smart clients
 
 The project is under development.

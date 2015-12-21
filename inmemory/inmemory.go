@@ -2,20 +2,21 @@
 //
 //
 package inmemory
+
 import (
 	"errors"
-	"time"
 	"github.com/maxzerbini/ovo/storage"
+	"time"
 )
 
-// The InMemoryStorage struct implements the OvoStorage interface. 
+// The InMemoryStorage struct implements the OvoStorage interface.
 type InMemoryStorage struct {
 	collection *InMemoryCollection
-	cleaner *Cleaner
+	cleaner    *Cleaner
 }
 
 // Create a InMemoryStorage.
-func NewInMemoryStorage()(*InMemoryStorage){
+func NewInMemoryStorage() *InMemoryStorage {
 	ks := new(InMemoryStorage)
 	ks.collection = NewCollection()
 	ks.cleaner = NewCleaner(ks, 60)
@@ -23,8 +24,8 @@ func NewInMemoryStorage()(*InMemoryStorage){
 }
 
 // Add an item to the storage.
-func (ks *InMemoryStorage) Put(obj *storage.MetaDataObj) (error){
-	if(obj != nil){
+func (ks *InMemoryStorage) Put(obj *storage.MetaDataObj) error {
+	if obj != nil {
 		if len(obj.Key) == 0 {
 			return errors.New("Object key is null.")
 		}
@@ -41,9 +42,9 @@ func (ks *InMemoryStorage) Put(obj *storage.MetaDataObj) (error){
 }
 
 // Get an item from the storage by key.
-func (ks *InMemoryStorage) Get(key string) (*storage.MetaDataObj, error){
+func (ks *InMemoryStorage) Get(key string) (*storage.MetaDataObj, error) {
 	if obj, ok := ks.collection.Get(key); ok {
-		if obj.IsExpired(){
+		if obj.IsExpired() {
 			return nil, errors.New("Not found.")
 		}
 		return obj, nil
@@ -64,7 +65,7 @@ func (ks *InMemoryStorage) DeleteExpired(key string) {
 // Get an item and remove it from the storage in a single operation.
 func (ks *InMemoryStorage) GetAndRemove(key string) (*storage.MetaDataObj, error) {
 	if obj, ok := ks.collection.GetAndRemove(key); ok {
-		if obj.IsExpired(){
+		if obj.IsExpired() {
 			return nil, errors.New("Not found.")
 		}
 		return obj, nil
@@ -73,8 +74,8 @@ func (ks *InMemoryStorage) GetAndRemove(key string) (*storage.MetaDataObj, error
 }
 
 // Update an item if the value is not changed.
-func (ks *InMemoryStorage) UpdateValueIfEqual(obj *storage.MetaDataUpdObj) (error){
-	if(obj != nil){
+func (ks *InMemoryStorage) UpdateValueIfEqual(obj *storage.MetaDataUpdObj) error {
+	if obj != nil {
 		if len(obj.Key) == 0 {
 			return errors.New("Object key is null.")
 		}
@@ -89,8 +90,8 @@ func (ks *InMemoryStorage) UpdateValueIfEqual(obj *storage.MetaDataUpdObj) (erro
 }
 
 // Update an item (key and value) if the value is not changed.
-func (ks *InMemoryStorage) UpdateKeyAndValueIfEqual(obj *storage.MetaDataUpdObj) (error){
-	if(obj != nil){
+func (ks *InMemoryStorage) UpdateKeyAndValueIfEqual(obj *storage.MetaDataUpdObj) error {
+	if obj != nil {
 		if len(obj.Key) == 0 {
 			return errors.New("Object key is null.")
 		}
@@ -108,8 +109,8 @@ func (ks *InMemoryStorage) UpdateKeyAndValueIfEqual(obj *storage.MetaDataUpdObj)
 }
 
 // Change the key of an item.
-func (ks *InMemoryStorage) UpdateKey(obj *storage.MetaDataUpdObj) (error){
-	if(obj != nil){
+func (ks *InMemoryStorage) UpdateKey(obj *storage.MetaDataUpdObj) error {
+	if obj != nil {
 		if len(obj.Key) == 0 {
 			return errors.New("Object key is null.")
 		}
@@ -132,22 +133,37 @@ func (ks *InMemoryStorage) Touch(key string) {
 }
 
 // Count the keys in the storage.
-func (ks *InMemoryStorage) Count() (int){
+func (ks *InMemoryStorage) Count() int {
 	return ks.collection.Count()
 }
 
-func (ks *InMemoryStorage) List() ([]*storage.MetaDataObj){
+func (ks *InMemoryStorage) List() []*storage.MetaDataObj {
 	return ks.collection.List()
 }
 
-func (ks *InMemoryStorage) Keys() ([]string){
+func (ks *InMemoryStorage) Keys() []string {
 	return ks.collection.Keys()
 }
 
-func (ks *InMemoryStorage) ListExpired()(elements []*storage.MetaDataObj) {
+func (ks *InMemoryStorage) ListExpired() (elements []*storage.MetaDataObj) {
 	return ks.collection.ListExpired()
 }
 
 func (ks *InMemoryStorage) Increment(c *storage.MetaDataCounter) *storage.MetaDataCounter {
 	return ks.collection.Increment(c)
+}
+
+func (ks *InMemoryStorage) SetCounter(c *storage.MetaDataCounter) *storage.MetaDataCounter {
+	return ks.collection.SetCounter(c)
+}
+
+// Get a counter by key.
+func (ks *InMemoryStorage) GetCounter(key string) (*storage.MetaDataCounter, error) {
+	if obj, ok := ks.collection.GetCounter(key); ok {
+		if obj.IsExpired() {
+			return nil, errors.New("Not found.")
+		}
+		return obj, nil
+	}
+	return nil, errors.New("Not found.")
 }

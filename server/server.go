@@ -61,6 +61,8 @@ func (srv *Server) Do() {
 	router.PUT("/ovo/keystorage/:key/updatekey", srv.updateKey)
 	router.GET("/ovo/cluster", srv.getTopology)
 	router.GET("/ovo/cluster/me", srv.getCurrentNode)
+	router.POST("/ovo/counters", srv.increment)
+	router.GET("/ovo/counters/:key", srv.getcounter)
 	if srv.config.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -261,4 +263,27 @@ func (srv *Server) getCurrentNode(c *gin.Context) {
 	res := model.NewOvoTopologyNode(srv.config.ServerNode)
 	result := model.NewOvoResponse("done", "0", res)
 	c.JSON(http.StatusOK, result)
+}
+
+func (srv *Server) increment(c *gin.Context) {
+	var counter model.OvoCounter
+	if c.BindJSON(&counter) == nil {
+		obj := model.NewMetaDataCounter(&counter)
+		cnt := srv.keystorage.Increment(obj)
+		srv.outcmdproc.Enqueu(&command.Command{OpCode: "setcounter", Obj: cnt.MetaDataUpdObj()})
+		c.JSON(http.StatusOK, model.NewOvoResponse("done", "0", model.NewOvoCounterResponse(cnt)))
+	} else {
+		c.JSON(http.StatusBadRequest, model.NewOvoResponse("error", "10", nil))
+	}
+}
+
+func (srv *Server) getcounter(c *gin.Context) {
+	key := c.Param("key")
+	if res, err := srv.keystorage.GetCounter(key); err == nil {
+		obj := model.NewOvoCounterResponse(res)
+		result := model.NewOvoResponse("done", "0", obj)
+		c.JSON(http.StatusOK, result)
+	} else {
+		c.JSON(http.StatusNotFound, model.NewOvoResponse("error", "101", nil))
+	}
 }

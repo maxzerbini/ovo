@@ -85,4 +85,6 @@ type OvoStorage interface {
 	Increment(c *MetaDataCounter) *MetaDataCounter
 	SetCounter(c *MetaDataCounter) *MetaDataCounter
 	GetCounter(key string) (obj *MetaDataCounter, err error)
+	DeleteCounter(key string)
+	ListCounters() []*MetaDataCounter 
 }

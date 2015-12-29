@@ -46,6 +46,8 @@ func (cq *InCommandQueue) backend() {
 				cq.updatekeyvalue(cmd.Obj)
 			case "setcounter":
 				cq.setcounter(cmd.Obj)
+			case "deletecounter":
+				cq.deletecounter(cmd.Obj)
 			default:
 				println("usupported command: " + cmd.OpCode)
 			}
@@ -79,4 +81,8 @@ func (cq *InCommandQueue) updatekeyvalue(obj *storage.MetaDataUpdObj) {
 
 func (cq *InCommandQueue) setcounter(obj *storage.MetaDataUpdObj) {
 	cq.keystorage.SetCounter(obj.MetaDataCounter())
+}
+
+func (cq *InCommandQueue) deletecounter(obj *storage.MetaDataUpdObj) {
+	cq.keystorage.DeleteCounter(obj.Key)
 }

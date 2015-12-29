@@ -55,5 +55,6 @@ The available API set includes these endpoints:
 - _POST /ovo/counters_ sets the value of the counter
 - _PUT /ovo/counters_ increments (or decrements) the value of the counter
 - _GET /ovo/counters/:key_ gets the value of the counter
+- _DELETE /ovo/counters/:key_ delete the counter
 
 The Go OVO Client can connect a cluster of OVO nodes. The Go client source code can be found here https://github.com/maxzerbini/ovoclient .

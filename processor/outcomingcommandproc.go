@@ -55,6 +55,10 @@ func (cq *OutCommandQueue) backend() {
 				cq.move(cmd.Obj)
 			case "setcounter":
 				cq.execute(cmd.Obj, cmd.OpCode)
+			case "deletecounter":
+				cq.execute(cmd.Obj, cmd.OpCode)
+			case "movecounter":
+				cq.moveCounter(cmd.Obj)
 			default:
 				println("usupported command: " + cmd.OpCode)
 			}
@@ -100,6 +104,17 @@ func (cq *OutCommandQueue) move(obj *storage.MetaDataUpdObj) {
 			cq.enqueuError(newCommandError(obj, node.Node, "move"))
 		} else {
 			cq.incomingQueue.Enqueu(&command.Command{OpCode: "delete", Obj: obj})
+		}
+	}
+}
+
+func (cq *OutCommandQueue) moveCounter(obj *storage.MetaDataUpdObj) {
+	if node := cq.topology.GetNodeByHash(obj.Hash); node != nil {
+		err := cq.Caller.ExecuteOperation(obj, node.Node, "setcounter")
+		if err != nil {
+			cq.enqueuError(newCommandError(obj, node.Node, "setcounter"))
+		} else {
+			cq.incomingQueue.Enqueu(&command.Command{OpCode: "deletecounter", Obj: obj})
 		}
 	}
 }

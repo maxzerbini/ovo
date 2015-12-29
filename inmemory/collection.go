@@ -262,3 +262,25 @@ func (coll *InMemoryCollection) GetCounter(key string) (*storage.MetaDataCounter
 		return result, true
 	}
 }
+
+// Remove the item of the collection
+func (coll *InMemoryCollection) DeleteCounter(key string) {
+	coll.commands <- func() { delete(coll.counters, key) }
+}
+
+// List the items in the collection
+func (coll *InMemoryCollection) ListCounters() []*storage.MetaDataCounter {
+	retChan := make(chan int)
+	defer close(retChan)
+	list := make([]*storage.MetaDataCounter, 0)
+	coll.commands <- func() {
+		for _, val := range coll.counters {
+			if !val.IsExpired() {
+				list = append(list, val)
+			}
+		}
+		retChan <- 1
+	}
+	<-retChan //wait for result
+	return list
+}

@@ -29,6 +29,16 @@ func (p *Partitioner) MoveData(){
 			}
 		}
 	}
+	var counters = p.storage.ListCounters()
+	log.Printf("Partitioner is moving counters (storage size = %d)\r\n", len(counters))
+	for _, obj := range counters {
+		if (obj != nil) {
+			if !util.Contains(p.serverNode.Node.HashRange, obj.Hash) {
+				log.Printf("Moving counter key = %s\r\n", obj.Key)
+				p.outcomingQueue.Enqueu(&command.Command{OpCode:"movecounter",Obj:obj.MetaDataUpdObj()})	
+			}
+		}
+	}
 }
 
 func (p *Partitioner) MoveObject(obj *storage.MetaDataObj){

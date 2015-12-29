@@ -167,3 +167,11 @@ func (ks *InMemoryStorage) GetCounter(key string) (*storage.MetaDataCounter, err
 	}
 	return nil, errors.New("Not found.")
 }
+
+func (ks *InMemoryStorage) DeleteCounter(key string) {
+	ks.collection.DeleteCounter(key)
+}
+
+func (ks *InMemoryStorage) ListCounters() []*storage.MetaDataCounter {
+	return ks.collection.ListCounters()
+}

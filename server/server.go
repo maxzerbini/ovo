@@ -64,6 +64,7 @@ func (srv *Server) Do() {
 	router.POST("/ovo/counters", srv.setcounter)
 	router.PUT("/ovo/counters", srv.increment)
 	router.GET("/ovo/counters/:key", srv.getcounter)
+	router.DELETE("/ovo/counters/:key", srv.deletecounter)
 	if srv.config.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -299,4 +300,11 @@ func (srv *Server) getcounter(c *gin.Context) {
 	} else {
 		c.JSON(http.StatusNotFound, model.NewOvoResponse("error", "101", nil))
 	}
+}
+
+func (srv *Server) deletecounter(c *gin.Context) {
+	key := c.Param("key")
+	srv.keystorage.DeleteCounter(key)
+	srv.outcmdproc.Enqueu(&command.Command{OpCode: "deletecounter", Obj: &storage.MetaDataUpdObj{Key: key}})
+	c.JSON(http.StatusOK, model.NewOvoResponse("done", "0", nil))
 }

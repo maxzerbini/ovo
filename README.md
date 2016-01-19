@@ -38,7 +38,7 @@ $ ovo -conf=./conf/serverconf3.json
 ## Node configuration
 
 ### The configuration file
-The configuration file serverconf.json is a JSON file that defines the addresses and ports used by OVO to listen for HTTP calls and cluster communications. The configuration file defines also other configurations parameters used by the server node.
+The configuration file _serverconf.json_ is a JSON file that defines the addresses and ports used by OVO to listen for HTTP calls and cluster communications. The configuration file defines also other configurations parameters used by the server node.
 These are the all the configuration parameters:
 - Name is the unique node name, if omitted the node will generate a random one
 - Host is the hostname or IP address of the HTTP listener
@@ -109,4 +109,4 @@ PM> Install-Package OVOdotNetClient
 
 ### Java client library
 The Java client library is under development.
-The source code is at https://github.com/maxzerbini/ovoclient .
+The source code is at https://github.com/maxzerbini/ovojava .

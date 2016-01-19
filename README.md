@@ -35,7 +35,45 @@ $ ovo -conf=./conf/serverconf2.json
 
 $ ovo -conf=./conf/serverconf3.json
 ```
+## Node configuration
 
+### The configuration file
+The configuration file serverconf.json is a JSON file that defines the addresses and ports used by OVO to listen for HTTP calls and cluster communications. The configuration file defines also other configurations parameters used by the server node.
+These are the all the configuration parameters:
+- Name is the unique node name, if omitted the node will generate a random one
+- Host is the hostname or IP address of the HTTP listener
+- ExtHost is the hostname used to expose the service to the clients
+- Port is the port of the HTTP listener
+- APIHost is the hostname or IP address used for inter-cluster communications
+- APIPort is the port used for inter-cluster communications
+- Twins is a list of node names of the cluster, the twins are the nodes used by the server to replicate its data
+- Stepbrothers is a list of node names of the cluster, stepbrothers are the nodes to which the server requests to become a replica
+- Debug is a flag that enables internal logging
+
+This is a configuration file example
+```JSON
+{
+	"ServerNode":
+	{
+		"Node":
+		{
+			"Name":"mizard",
+			"Host":"0.0.0.0",
+			"ExtHost":"localhost",
+			"Port":5050,
+			"APIHost":"localhost",
+			"APIPort":5052
+		},
+		"Twins":[],
+		"Stepbrothers":[]
+	},
+	"Debug":true
+}
+```
+
+### The temporary configuration file
+Every time that the server starts or every time that the cluster topology changes the temporary configuration file is updated and saved.
+The temporary configuration file resides in the same folder of the configuration file and has the same name but its extension is .temp .
 ## RESTful API
 Clients can connect OVO using RESTful API. 
 
@@ -57,4 +95,18 @@ The available API set includes these endpoints:
 - _GET /ovo/counters/:key_ gets the value of the counter
 - _DELETE /ovo/counters/:key_ delete the counter
 
+## Client libraries
+
+### Go client library
 The Go OVO Client can connect a cluster of OVO nodes. The Go client source code can be found here https://github.com/maxzerbini/ovoclient .
+
+### .Net cleint library
+The .Net OVO Client can connect a cluster of OVO nodes and offers the same API of the Go client. The .Net client source code can be found here https://github.com/maxzerbini/ovodotnet .
+The library can by downloaded via Nuge.org at https://www.nuget.org/packages/OVOdotNetClient/ or using the Nuget Package Manager.
+```
+PM> Install-Package OVOdotNetClient
+```
+
+### Java client library
+The Java client library is under development.
+The source code is at https://github.com/maxzerbini/ovoclient .

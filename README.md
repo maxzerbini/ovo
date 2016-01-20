@@ -68,6 +68,39 @@ This is a configuration file example
 	"Debug":true
 }
 ```
+### Cluster configuration
+OVO cluster can be formed by two or more nodes. Nodes can be added or removed without stopping the cluster activities. 
+We must configure the node that is added to a cluster so that I can see at least another active node. This is done by providing a description (maybe partial) of the topology.
+This sample configuration allows us to create a cluster formed by two nodes *mizard* and  *righel* and in which one is the twin of the other.
+```JSON
+{
+  "ServerNode": {
+    "Node": {
+      "Name": "righel",
+      "Host": "192.168.1.103",
+      "Port": 5050,
+      "APIHost": "192.168.1.103",
+      "APIPort": 5052
+    },
+    "Twins": ["mizard"],
+    "Stepbrothers": ["mizard"]
+  },
+  "Topology": {
+    "Nodes": [
+      {
+        "Node": {
+          "Name": "mizard",
+          "Host": "192.168.1.102",
+          "Port": 5050,
+          "APIHost": "192.168.1.102",
+          "APIPort": 5052
+        }
+      }
+    ]
+  },
+  "Debug": true
+}
+```
 
 ### The temporary configuration file
 Every time that the server starts or every time that the cluster topology changes the temporary configuration file is updated and saved.

@@ -95,7 +95,7 @@ func NewMetaDataUpdObj(req *OvoKVUpdateRequest) *storage.MetaDataUpdObj {
 }
 
 func NewOvoTopologyNode(node *cluster.ClusterTopologyNode) *OvoTopologyNode {
-	return &OvoTopologyNode{Name: node.Node.Name, HashRange: node.Node.HashRange, Host: node.Node.ExtHost, Port: node.Node.Port, State: node.Node.State, Twins: node.Twins}
+	return &OvoTopologyNode{Name: node.Node.Name, HashRange: node.Node.HashRange, Host: node.Node.Host, Port: node.Node.Port, State: node.Node.State, Twins: node.Twins}
 }
 
 func NewOvoTopology(topology *cluster.ClusterTopology) *OvoTopology {
@@ -111,5 +111,5 @@ func NewMetaDataCounter(counter *OvoCounter) *storage.MetaDataCounter {
 }
 
 func NewOvoCounterResponse(counter *storage.MetaDataCounter) *OvoCounterResponse {
-	return &OvoCounterResponse{Key:counter.Key, Value:counter.Value}
+	return &OvoCounterResponse{Key: counter.Key, Value: counter.Value}
 }

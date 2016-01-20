@@ -4,8 +4,7 @@
 		"Node":
 		{
 			"Name":"mizard",
-			"Host":"0.0.0.0",
-			"ExtHost":"localhost",
+			"Host":"localhost",
 			"Port":5050,
 			"APIHost":"localhost",
 			"APIPort":5052

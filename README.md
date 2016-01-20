@@ -42,7 +42,6 @@ The configuration file _serverconf.json_ is a JSON file that defines the address
 These are the all the configuration parameters:
 - *Name* is the unique node name, if omitted the node will generate a random one
 - *Host* is the hostname or IP address of the HTTP listener
-- *ExtHost* is the hostname used to expose the service to the clients
 - *Port* is the port of the HTTP listener
 - *APIHost* is the hostname or IP address used for inter-cluster communications
 - *APIPort* is the port used for inter-cluster communications
@@ -58,10 +57,9 @@ This is a configuration file example
 		"Node":
 		{
 			"Name":"mizard",
-			"Host":"0.0.0.0",
-			"ExtHost":"localhost",
+			"Host":"192.168.1.102",
 			"Port":5050,
-			"APIHost":"localhost",
+			"APIHost":"192.168.1.102",
 			"APIPort":5052
 		},
 		"Twins":[],
@@ -74,6 +72,7 @@ This is a configuration file example
 ### The temporary configuration file
 Every time that the server starts or every time that the cluster topology changes the temporary configuration file is updated and saved.
 The temporary configuration file resides in the same folder of the configuration file and has the same name but its extension is .temp .
+
 ## RESTful API
 Clients can connect OVO using RESTful API. 
 

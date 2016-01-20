@@ -135,11 +135,11 @@ The Go OVO Client can connect a cluster of OVO nodes. The Go client source code 
 
 ### .Net cleint library
 The .Net OVO Client can connect a cluster of OVO nodes and offers the same API of the Go client. The .Net client source code can be found here https://github.com/maxzerbini/ovodotnet .
-The library can by downloaded via *Nuget.org* at https://www.nuget.org/packages/OVOdotNetClient/ or using the Nuget Package Manager.
+The library can by downloaded via *Nuget.org* on https://www.nuget.org/packages/OVOdotNetClient/ or using the Nuget Package Manager.
 ```
 PM> Install-Package OVOdotNetClient
 ```
 
 ### Java client library
 The Java client library is under development.
-The source code is at https://github.com/maxzerbini/ovojava .
+The source code is on https://github.com/maxzerbini/ovojava .

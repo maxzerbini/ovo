@@ -1,1 +1,42 @@
-{"ServerNode":{"Node":{"Name":"righel","HashRange":[],"Host":"localhost","Port":5060,"APIHost":"localhost","APIPort":5062},"StartDate":"2015-10-08T08:23:09.2660715+02:00","Twins":["mizard"],"Stepbrothers":[]},"Topology":{"Nodes":[{"Node":{"Name":"mizard","HashRange":[],"Host":"localhost","Port":5050,"APIHost":"localhost","APIPort":5052},"StartDate":"2015-10-08T08:23:09.2660715+02:00","Twins":[]}]},"Debug":true}
+{
+  "ServerNode": {
+    "Node": {
+      "Name": "righel",
+      "HashRange": [
+        
+      ],
+      "Host": "localhost",
+      "Port": 5060,
+      "APIHost": "localhost",
+      "APIPort": 5062
+    },
+    "StartDate": "2015-10-08T08:23:09.2660715+02:00",
+    "Twins": [
+      "mizard"
+    ],
+    "Stepbrothers": [
+      
+    ]
+  },
+  "Topology": {
+    "Nodes": [
+      {
+        "Node": {
+          "Name": "mizard",
+          "HashRange": [
+            
+          ],
+          "Host": "localhost",
+          "Port": 5050,
+          "APIHost": "localhost",
+          "APIPort": 5052
+        },
+        "StartDate": "2015-10-08T08:23:09.2660715+02:00",
+        "Twins": [
+          
+        ]
+      }
+    ]
+  },
+  "Debug": true
+}

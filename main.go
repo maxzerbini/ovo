@@ -1,14 +1,14 @@
 package main
 
-import(
-	"github.com/maxzerbini/ovo/util"
-	"github.com/maxzerbini/ovo/storage"
+import (
+	"flag"
 	"github.com/maxzerbini/ovo/inmemory"
 	"github.com/maxzerbini/ovo/server"
+	"github.com/maxzerbini/ovo/storage"
+	"github.com/maxzerbini/ovo/util"
 	"log"
 	"runtime"
 	"runtime/debug"
-	"flag"
 )
 
 const (
@@ -16,10 +16,10 @@ const (
 )
 
 var (
-	ks storage.OvoStorage
-	conf server.ServerConf
-	srv *server.Server
-	configPath string = "./conf/serverconf.json"
+	ks             storage.OvoStorage
+	conf           server.ServerConf
+	srv            *server.Server
+	configPath     string = "./conf/serverconf.json"
 	configPathTemp string = "./conf/serverconf.json.temp"
 )
 
@@ -30,7 +30,7 @@ func init() {
 }
 
 // Start the Ovo Key/Value Storage
-func main(){
+func main() {
 	flag.Parse()
 	configPathTemp = configPath + ".temp"
 	util.Protect(start)
@@ -40,14 +40,13 @@ func main(){
 // Start the server node
 func start() {
 	conf = server.LoadConfiguration(configPath)
-	log.Printf("Start server node OVO Engine v.%s .\r\n",Version)
+	log.Printf("Start server node OVO Engine v.%s .\r\n", Version)
 	conf.Init(configPathTemp)
 	ks = inmemory.NewInMemoryStorage()
 	srv = server.NewServer(&conf, ks)
 	srv.Do()
 }
 
-func stop(){
+func stop() {
 	log.Println("Stop server node.")
 }
-

@@ -2,8 +2,9 @@ package inmemory
 
 import (
 	"bytes"
-	"github.com/maxzerbini/ovo/storage"
 	"time"
+
+	"github.com/maxzerbini/ovo/storage"
 )
 
 const collection_buffer_size = 100
@@ -283,4 +284,23 @@ func (coll *InMemoryCollection) ListCounters() []*storage.MetaDataCounter {
 	}
 	<-retChan //wait for result
 	return list
+}
+
+// Delete an item if the value is not changed.
+func (coll *InMemoryCollection) DeleteValueIfEqual(obj *storage.MetaDataObj) bool {
+	retChan := make(chan bool)
+	defer close(retChan)
+	coll.commands <- func() {
+		if ret, ok := coll.storage[obj.Key]; ok {
+			if bytes.Equal(ret.Data, obj.Data) {
+				delete(coll.storage, obj.Key)
+				retChan <- true
+			} else {
+				retChan <- false // values are not equal
+			}
+		} else {
+			retChan <- true
+		}
+	}
+	return <-retChan //wait for resul
 }

@@ -2,9 +2,7 @@
   "ServerNode": {
     "Node": {
       "Name": "righel",
-      "Host": "localhost",
       "Port": 5060,
-      "APIHost": "localhost",
       "APIPort": 5062
     },
     "Twins": ["mizard"],

@@ -4,9 +4,7 @@
 		"Node":
 		{
 			"Name":"mizard",
-			"Host":"localhost",
 			"Port":5050,
-			"APIHost":"localhost",
 			"APIPort":5052
 		},
 		"Twins":[],

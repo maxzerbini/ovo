@@ -2,9 +2,7 @@
   "ServerNode": {
     "Node": {
       "Name": "artorius",
-      "Host": "localhost",
       "Port": 5070,
-      "APIHost": "localhost",
       "APIPort": 5072
     },
     "Twins": ["righel"],

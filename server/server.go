@@ -5,6 +5,9 @@ import (
 )
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"github.com/maxzerbini/ovo/cluster"
 	"github.com/maxzerbini/ovo/command"
@@ -12,8 +15,6 @@ import (
 	"github.com/maxzerbini/ovo/server/model"
 	"github.com/maxzerbini/ovo/storage"
 	"github.com/maxzerbini/ovo/util"
-	"net/http"
-	"strconv"
 )
 
 type Server struct {
@@ -65,6 +66,7 @@ func (srv *Server) Do() {
 	router.PUT("/ovo/counters", srv.increment)
 	router.GET("/ovo/counters/:key", srv.getcounter)
 	router.DELETE("/ovo/counters/:key", srv.deletecounter)
+	router.POST("/ovo/keystorage/:key/deletevalueifequal", srv.deleteValueIfEqual)
 	if srv.config.Debug {
 		gin.SetMode(gin.DebugMode)
 	} else {
@@ -76,7 +78,11 @@ func (srv *Server) Do() {
 	go srv.nodeChecker.Do()
 	log.Printf("Node %s started\r\n", srv.config.ServerNode.Node.Name)
 	// Listen and server on Host:Port
-	router.Run(srv.config.ServerNode.Node.Host + ":" + strconv.Itoa(srv.config.ServerNode.Node.Port))
+	if srv.config.HttpBindAll {
+		router.Run("0.0.0.0:" + strconv.Itoa(srv.config.ServerNode.Node.Port))
+	} else {
+		router.Run(srv.config.ServerNode.Node.Host + ":" + strconv.Itoa(srv.config.ServerNode.Node.Port))
+	}
 }
 
 func (srv *Server) registerServer() {
@@ -307,4 +313,22 @@ func (srv *Server) deletecounter(c *gin.Context) {
 	srv.keystorage.DeleteCounter(key)
 	srv.outcmdproc.Enqueu(&command.Command{OpCode: "deletecounter", Obj: &storage.MetaDataUpdObj{Key: key}})
 	c.JSON(http.StatusOK, model.NewOvoResponse("done", "0", nil))
+}
+
+func (srv *Server) deleteValueIfEqual(c *gin.Context) {
+	key := c.Param("key")
+	var kv model.OvoKVRequest
+	if c.BindJSON(&kv) == nil {
+		obj := model.NewMetaDataObj(&kv)
+		obj.Key = key
+		err := srv.keystorage.DeleteValueIfEqual(obj)
+		if err == nil {
+			srv.outcmdproc.Enqueu(&command.Command{OpCode: "delete", Obj: obj.MetaDataUpdObj()})
+			c.JSON(http.StatusOK, model.NewOvoResponse("done", "0", nil))
+		} else {
+			c.JSON(http.StatusForbidden, model.NewOvoResponse("error", "103", nil))
+		}
+	} else {
+		c.JSON(http.StatusBadRequest, model.NewOvoResponse("error", "10", nil))
+	}
 }

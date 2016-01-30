@@ -41,9 +41,9 @@ $ ovo -conf=./conf/serverconf3.json
 The configuration file _serverconf.json_ is a JSON file that defines the addresses and ports used by OVO to listen for HTTP calls and cluster communications. The configuration file defines also other configurations parameters used by the server node.
 These are the all the configuration parameters:
 - *Name* is the unique node name, if omitted the node will generate a random one
-- *Host* is the hostname or IP address of the HTTP listener
+- *Host* is the hostname or IP address of the HTTP listener, if it's omitted the server binds all the interfaces
 - *Port* is the port of the HTTP listener
-- *APIHost* is the hostname or IP address used for inter-cluster communications
+- *APIHost* is the hostname or IP address used for inter-cluster communications, if it's omitted the server binds all the interfaces
 - *APIPort* is the port used for inter-cluster communications
 - *Twins* is a list of node names of the cluster, the twins are the nodes used by the server to replicate its data
 - *Stepbrothers* is a list of node names of the cluster, stepbrothers are the nodes to which the server requests to become a replica
@@ -127,6 +127,7 @@ The available API set includes these endpoints:
 - _PUT /ovo/counters_ increments (or decrements) the value of the counter
 - _GET /ovo/counters/:key_ gets the value of the counter
 - _DELETE /ovo/counters/:key_ delete the counter
+- _POST /ovo/keystorage/:key/deletevalueifequal_ delete the object if it's not changed
 
 ## Client libraries
 

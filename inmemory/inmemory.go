@@ -5,8 +5,9 @@ package inmemory
 
 import (
 	"errors"
-	"github.com/maxzerbini/ovo/storage"
 	"time"
+
+	"github.com/maxzerbini/ovo/storage"
 )
 
 // The InMemoryStorage struct implements the OvoStorage interface.
@@ -137,22 +138,27 @@ func (ks *InMemoryStorage) Count() int {
 	return ks.collection.Count()
 }
 
+// List the items in the collection
 func (ks *InMemoryStorage) List() []*storage.MetaDataObj {
 	return ks.collection.List()
 }
 
+// List the keys of the items in the collection
 func (ks *InMemoryStorage) Keys() []string {
 	return ks.collection.Keys()
 }
 
+// List the expired items of the collection
 func (ks *InMemoryStorage) ListExpired() (elements []*storage.MetaDataObj) {
 	return ks.collection.ListExpired()
 }
 
+// Increment a counter.
 func (ks *InMemoryStorage) Increment(c *storage.MetaDataCounter) *storage.MetaDataCounter {
 	return ks.collection.Increment(c)
 }
 
+// Set the value of a counter.
 func (ks *InMemoryStorage) SetCounter(c *storage.MetaDataCounter) *storage.MetaDataCounter {
 	return ks.collection.SetCounter(c)
 }
@@ -168,10 +174,21 @@ func (ks *InMemoryStorage) GetCounter(key string) (*storage.MetaDataCounter, err
 	return nil, errors.New("Not found.")
 }
 
+// Remove the item of the collection
 func (ks *InMemoryStorage) DeleteCounter(key string) {
 	ks.collection.DeleteCounter(key)
 }
 
+// List the items in the collection
 func (ks *InMemoryStorage) ListCounters() []*storage.MetaDataCounter {
 	return ks.collection.ListCounters()
+}
+
+// Delete an item if the value is not changed.
+func (ks *InMemoryStorage) DeleteValueIfEqual(obj *storage.MetaDataObj) error {
+	if ks.collection.DeleteValueIfEqual(obj) {
+		return nil
+	} else {
+		return errors.New("Values are not equal.")
+	}
 }

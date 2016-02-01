@@ -18,7 +18,12 @@ The project is under development.
 
 ## Building OVO
 
+### Latest Build
+[![Build Status](https://drone.io/github.com/maxzerbini/ovo/status.png)](https://drone.io/github.com/maxzerbini/ovo/latest)
+
+### Build Commands
 ```bash
+$ go get github.com/maxzerbini/ovo
 $ go build -i github.com/maxzerbini/ovo
 ```
 

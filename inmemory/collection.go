@@ -94,19 +94,29 @@ func (coll *InMemoryCollection) GetAndRemove(key string) (*storage.MetaDataObj, 
 }
 
 // Update an item if the value is not changed.
-func (coll *InMemoryCollection) UpdateValueIfEqual(obj *storage.MetaDataUpdObj) {
+func (coll *InMemoryCollection) UpdateValueIfEqual(obj *storage.MetaDataUpdObj) bool {
+	retChan := make(chan bool)
+	defer close(retChan)
 	coll.commands <- func() {
 		if ret, ok := coll.storage[obj.Key]; ok {
 			if bytes.Equal(ret.Data, obj.Data) {
 				ret.Data = obj.NewData
 				ret.CreationDate = obj.CreationDate
+				retChan <- true
+			} else {
+				retChan <- false // not equal
 			}
+		} else {
+			retChan <- false // not found
 		}
 	}
+	return <-retChan //wait for result
 }
 
 // Update an item (key and value) if the value is not changed.
-func (coll *InMemoryCollection) UpdateKeyAndValueIfEqual(obj *storage.MetaDataUpdObj) {
+func (coll *InMemoryCollection) UpdateKeyAndValueIfEqual(obj *storage.MetaDataUpdObj) bool {
+	retChan := make(chan bool)
+	defer close(retChan)
 	coll.commands <- func() {
 		if ret, ok := coll.storage[obj.Key]; ok {
 			if bytes.Equal(ret.Data, obj.Data) {
@@ -116,9 +126,15 @@ func (coll *InMemoryCollection) UpdateKeyAndValueIfEqual(obj *storage.MetaDataUp
 				ret.Hash = obj.NewHash
 				ret.CreationDate = obj.CreationDate
 				coll.storage[obj.NewKey] = ret
+				retChan <- true
+			} else {
+				retChan <- false
 			}
+		} else {
+			retChan <- false
 		}
 	}
+	return <-retChan //wait for result
 }
 
 // Change the key of an item.
@@ -302,5 +318,5 @@ func (coll *InMemoryCollection) DeleteValueIfEqual(obj *storage.MetaDataObj) boo
 			retChan <- true
 		}
 	}
-	return <-retChan //wait for resul
+	return <-retChan //wait for result
 }

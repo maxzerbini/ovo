@@ -84,8 +84,11 @@ func (ks *InMemoryStorage) UpdateValueIfEqual(obj *storage.MetaDataUpdObj) error
 			obj.Collection = "default"
 		}
 		obj.CreationDate = time.Now()
-		ks.collection.UpdateValueIfEqual(obj)
-		return nil
+		if ks.collection.UpdateValueIfEqual(obj) {
+			return nil
+		} else {
+			return errors.New("Objects are not equal.")
+		}
 	}
 	return errors.New("Object is null.")
 }
@@ -103,8 +106,11 @@ func (ks *InMemoryStorage) UpdateKeyAndValueIfEqual(obj *storage.MetaDataUpdObj)
 			obj.Collection = "default"
 		}
 		obj.CreationDate = time.Now()
-		ks.collection.UpdateKeyAndValueIfEqual(obj)
-		return nil
+		if ks.collection.UpdateKeyAndValueIfEqual(obj) {
+			return nil
+		} else {
+			return errors.New("Objects are not equal.")
+		}
 	}
 	return errors.New("Object is null.")
 }

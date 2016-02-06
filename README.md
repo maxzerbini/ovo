@@ -137,10 +137,10 @@ The available API set includes these endpoints:
 ## Client libraries
 
 ### Go client library
-The Go OVO Client can connect a cluster of OVO nodes. The Go client source code can be found here https://github.com/maxzerbini/ovoclient .
+The Go OVO Client can connect a cluster of OVO nodes. The Go client source code can be found here [ovoclient](https://github.com/maxzerbini/ovoclient).
 
 ### .Net client library
-The .Net OVO Client can connect a cluster of OVO nodes and offers the same API of the Go client. The .Net client source code can be found here https://github.com/maxzerbini/ovodotnet .
+The .Net OVO Client can connect a cluster of OVO nodes and offers the same API of the Go client. The .Net client source code can be found here [ovodotnet](https://github.com/maxzerbini/ovodotnet).
 The library can be downloaded from *Nuget.org* at https://www.nuget.org/packages/OVOdotNetClient/ or using the Nuget Package Manager.
 ```
 PM> Install-Package OVOdotNetClient
@@ -148,4 +148,4 @@ PM> Install-Package OVOdotNetClient
 
 ### Java client library
 The Java client library is under development.
-The source code is on https://github.com/maxzerbini/ovojava .
+The source code is in [ovojava](https://github.com/maxzerbini/ovojava).

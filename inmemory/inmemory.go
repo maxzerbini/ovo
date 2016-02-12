@@ -12,14 +12,14 @@ import (
 
 // The InMemoryStorage struct implements the OvoStorage interface.
 type InMemoryStorage struct {
-	collection *InMemoryCollection
+	collection *InMemoryMutexCollection
 	cleaner    *Cleaner
 }
 
 // Create a InMemoryStorage.
 func NewInMemoryStorage() *InMemoryStorage {
 	ks := new(InMemoryStorage)
-	ks.collection = NewCollection()
+	ks.collection = NewMutexCollection()
 	ks.cleaner = NewCleaner(ks, 60)
 	return ks
 }

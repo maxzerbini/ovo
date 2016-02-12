@@ -7,8 +7,6 @@ import (
 	"github.com/maxzerbini/ovo/storage"
 )
 
-const collection_buffer_size = 100
-
 // Collection (Map) of MetaDataObj. This collection is thread-safe.
 type InMemoryCollection struct {
 	storage  map[string]*storage.MetaDataObj

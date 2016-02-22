@@ -17,15 +17,15 @@ func Protect(g func()) {
 
 // Check if a slice of int contains a value
 func Contains(s []int, e int) bool {
-    if s == nil {
+	if s == nil {
 		return false
 	}
 	for _, a := range s {
-        if a == e {
-            return true
-        }
-    }
-    return false
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
 
 // Check if a slice of int contains a value
@@ -33,20 +33,21 @@ func ContainsString(s []string, e string) bool {
 	if s == nil {
 		return false
 	}
-    for _, a := range s {
-        if a == e {
-            return true
-        }
-    }
-    return false
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
+
 // Remove all occurences of the element in the slice
 func RemoveElement(s []string, element string) []string {
-	list := make([]string,0)
-	for _,e := range s {
+	list := make([]string, 0)
+	for _, e := range s {
 		if e != element {
 			list = append(list, e)
 		}
 	}
-	return list;
+	return list
 }
